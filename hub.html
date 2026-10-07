@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每日情报站 · Still Here</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+<div class="page-wrap">
+<aside class="site-side">
+<div class="site-brand">🏛 Still Here</div>
+<ul class="site-nav">
+<li><a href="test1.html">🏠 首页 · 待办</a></li>
+<li><a class="cur" href="hub.html">📰 每日情报站</a></li>
+<li><a href="philosophy.html">🧠 每日哲学</a></li>
+<li><a href="movies.html">🎬 电影片单</a></li>
+<li><a href="books.html">📚 书单</a></li>
+<li><a href="mao.html">📕 每日毛选</a></li>
+<li><a href="greek.html">🏛️ 古希腊文明</a></li>
+<li><a href="about friends.html">👥 关于我的朋友们</a></li>
+</ul>
+
+<a class="side-contact" href="mailto:your-email@example.com">✉️ 联系我</a>
+</aside>
+<main class="site-main">
+<!-- ===== 模块二：每日情报站 ===== -->
+    <section class="hub-section" id="hub">
+      <h2>📰 每日情报站</h2>
+      <p class="hub-date">今天是 <span id="hubDate"></span> · <span id="hubStatus"></span><button class="hub-refresh" id="hubRefreshBtn" type="button">🔄 实时刷新</button></p>
+      <div class="hub-grid">
+        <div class="hub-card">
+          <h3>🤖 AI 前沿</h3>
+          <ul class="hub-live" id="live-ai"></ul>
+          <ul>
+            <li><a href="https://www.qbitai.com/" target="_blank" rel="noopener noreferrer">量子位 <span class="hub-desc">大模型·AI 应用日报</span></a></li>
+            <li><a href="https://www.jiqizhixin.com/" target="_blank" rel="noopener noreferrer">机器之心 <span class="hub-desc">学界·产业深度报道</span></a></li>
+            <li><a href="https://www.aibase.com/" target="_blank" rel="noopener noreferrer">AIbase <span class="hub-desc">AI 工具与快讯聚合</span></a></li>
+          </ul>
+        </div>
+        <div class="hub-card">
+          <h3>🏀 NBA 战报</h3>
+          <ul class="hub-live" id="live-nba"></ul>
+          <ul>
+            <li><a href="https://nba.hupu.com/" target="_blank" rel="noopener noreferrer">虎扑 NBA <span class="hub-desc">战报·数据·社区热帖</span></a></li>
+            <li><a href="https://www.zhibo8.cc/" target="_blank" rel="noopener noreferrer">直播吧 <span class="hub-desc">赛程·集锦·滚动新闻</span></a></li>
+            <li><a href="https://china.nba.cn/" target="_blank" rel="noopener noreferrer">NBA 官网 <span class="hub-desc">官方赛况与回放</span></a></li>
+            <li><a href="https://www.espn.com/nba/" target="_blank" rel="noopener noreferrer">ESPN NBA <span class="hub-desc">英文一手战报</span></a></li>
+          </ul>
+        </div>
+        <div class="hub-card">
+          <h3>🎓 清华科研 <span class="hub-tag">工物 · 原子 · 核</span></h3>
+          <ul class="hub-live" id="live-thu"></ul>
+          <ul>
+            <li><a href="https://news.tsinghua.edu.cn/" target="_blank" rel="noopener noreferrer">清华新闻网 <span class="hub-desc">官方科研要闻</span></a></li>
+            <li><a href="https://www.inet.tsinghua.edu.cn/" target="_blank" rel="noopener noreferrer">核研院 <span class="hub-desc">核能·原子能方向</span></a></li>
+            <li><a href="https://www.phys.tsinghua.edu.cn/" target="_blank" rel="noopener noreferrer">物理系 <span class="hub-desc">前沿物理进展</span></a></li>
+            <li><a href="https://www.tsinghua.edu.cn/kxyj.htm" target="_blank" rel="noopener noreferrer">清华官网·科学研究 <span class="hub-desc">全校科研成果汇总</span></a></li>
+          </ul>
+        </div>
+        <div class="hub-card">
+          <h3>🔫 CS:GO 军械库</h3>
+          <ul class="hub-live" id="live-csgo"></ul>
+          <ul>
+            <li><a href="https://www.hltv.org/" target="_blank" rel="noopener noreferrer">HLTV <span class="hub-desc">国际赛事·新闻·排名</span></a></li>
+            <li><a href="https://space.bilibili.com/258484917" target="_blank" rel="noopener noreferrer">CSGO-DOUBLEup <span class="hub-desc">练枪教学·赛事解说</span></a></li>
+            <li><a href="https://pvp.wanmei.com/" target="_blank" rel="noopener noreferrer">完美世界电竞 <span class="hub-desc">CS2 国服·赛事</span></a></li>
+            <li><a href="https://search.bilibili.com/all?keyword=CS2道具教学" target="_blank" rel="noopener noreferrer">B站道具教学 <span class="hub-desc">烟雾弹·闪光点位</span></a></li>
+            <li><a href="https://search.bilibili.com/all?keyword=CS2练枪" target="_blank" rel="noopener noreferrer">B站练枪教程 <span class="hub-desc">瞄准·预瞄·压枪</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    
+</main>
+</div>
+<script>
+      document.getElementById('hubDate').textContent = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+      (function () {
+        var boxes = { ai: 'live-ai', nba: 'live-nba', thu: 'live-thu', csgo: 'live-csgo' };
+        var emptyMsg = {
+          ai: '今日重磅还没送到，先用下面渠道直达～',
+          nba: '今天没有新战报（可能休赛日），点下面渠道看最新动态',
+          thu: '今天暂无新发布，点下面渠道看最新进展',
+          csgo: '今日重磅还没送到，先用下面渠道直达～'
+        };
+        var d = new Date();
+        var today = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+        var hasData = (typeof DAILY_NEWS !== 'undefined');
+        for (var k in boxes) {
+          var el = document.getElementById(boxes[k]);
+          if (!el) continue;
+          var items = (hasData && DAILY_NEWS[k]) ? DAILY_NEWS[k] : [];
+          var html = '<li class="hub-live-title">⚡ 今日要闻</li>';
+          if (items.length) {
+            for (var i = 0; i < items.length; i++) {
+              html += '<li><a href="' + items[i].u + '" target="_blank" rel="noopener noreferrer"></a></li>';
+            }
+            if (hasData && DAILY_NEWS.date !== today) {
+              html += '<li class="hub-stale">情报更新于 ' + DAILY_NEWS.date + '（今天还没更新）</li>';
+            }
+          } else {
+            html += '<li class="hub-stale">' + emptyMsg[k] + '</li>';
+          }
+          el.innerHTML = html;
+          var as = el.querySelectorAll('a');
+          for (var j = 0; j < as.length; j++) as[j].textContent = items[j].t;
+        }
+      })();
+    </script>
+</body>
+</html>

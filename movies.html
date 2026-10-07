@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>电影片单 · Still Here</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+<div class="page-wrap">
+<aside class="site-side">
+<div class="site-brand">🏛 Still Here</div>
+<ul class="site-nav">
+<li><a href="test1.html">🏠 首页 · 待办</a></li>
+<li><a href="hub.html">📰 每日情报站</a></li>
+<li><a href="philosophy.html">🧠 每日哲学</a></li>
+<li><a class="cur" href="movies.html">🎬 电影片单</a></li>
+<li><a href="books.html">📚 书单</a></li>
+<li><a href="mao.html">📕 每日毛选</a></li>
+<li><a href="greek.html">🏛️ 古希腊文明</a></li>
+<li><a href="about friends.html">👥 关于我的朋友们</a></li>
+</ul>
+
+<a class="side-contact" href="mailto:your-email@example.com">✉️ 联系我</a>
+</aside>
+<main class="site-main">
+<!-- ===== 模块四：电影片单 ===== -->
+    <section class="movie-section" id="movies">
+      <h2>🎬 电影片单</h2>
+      <p class="movie-date" id="mvDate"></p>
+      <div class="movie-pick">
+        <p class="movie-pick-tag">🔥 今日推荐 · 豆瓣高分</p>
+        <p class="movie-pick-name" id="mvPickName"></p>
+        <p class="movie-pick-meta" id="mvPickMeta"></p>
+        <p class="movie-pick-line" id="mvPickLine"></p>
+      </div>
+      <h3 class="movie-sub">📝 我的片单记录</h3>
+      <form class="movie-form" id="movieForm">
+        <div class="movie-row">
+          <input type="date" id="mvDateInput" required>
+          <input type="text" id="mvNameInput" placeholder="片名" maxlength="60" required>
+        </div>
+        <textarea id="mvThought" placeholder="看完的感受……（可不填）" maxlength="300"></textarea>
+        <button type="submit">登记</button>
+      </form>
+      <ul id="movieList"></ul>
+    </section>
+    <script>
+      var MOVIE_POOL = [
+        { n: '霸王别姬', y: 1993, g: '剧情 / 爱情', s: 9.6, line: '不疯魔不成活，风华绝代程蝶衣。' },
+        { n: '控方证人', y: 1957, g: '悬疑 / 剧情', s: 9.6, line: '法庭之上人人说谎，最后一分钟的反转封神。' },
+        { n: '阿甘正传', y: 1994, g: '剧情 / 爱情', s: 9.5, line: '生活就像一盒巧克力，你永远不知道下一颗是什么味道。' },
+        { n: '辛德勒的名单', y: 1993, g: '剧情 / 历史 / 战争', s: 9.5, line: '拯救一个人，就是拯救全世界。' },
+        { n: '千与千寻', y: 2001, g: '动画 / 奇幻', s: 9.4, line: '最好的宫崎骏，最好的久石让。' },
+        { n: '忠犬八公的故事', y: 2009, g: '剧情 / 家庭', s: 9.4, line: '永远都不能忘记你所爱的人。' },
+        { n: '放牛班的春天', y: 2004, g: '剧情 / 音乐', s: 9.3, line: '天籁童声里，问题学生也有春天。' },
+        { n: '教父', y: 1972, g: '剧情 / 犯罪', s: 9.3, line: '无法逾越的黑帮史诗。' },
+        { n: '触不可及', y: 2011, g: '剧情 / 喜剧', s: 9.3, line: '跨越阶层的友谊，笑着笑着就哭了。' },
+        { n: '海蒂和爷爷', y: 2015, g: '剧情 / 家庭', s: 9.3, line: '阿尔卑斯山的治愈神作。' },
+        { n: '天堂电影院', y: 1988, g: '剧情 / 爱情', s: 9.2, line: '那些吻戏与青春，都留在放映机的光里。' },
+        { n: '蝙蝠侠：黑暗骑士', y: 2008, g: '动作 / 科幻', s: 9.2, line: '希斯·莱杰之后再无小丑。' },
+        { n: '三傻大闹宝莱坞', y: 2009, g: '剧情 / 喜剧', s: 9.2, line: 'All is well——学习是为了完善人生，而非享受人生。' },
+        { n: '大话西游之大圣娶亲', y: 1995, g: '喜剧 / 爱情', s: 9.2, line: '一万年的承诺，一生所爱。' },
+        { n: '当幸福来敲门', y: 2006, g: '剧情 / 家庭', s: 9.2, line: '别让别人告诉你，你成不了才。' },
+        { n: '少年派的奇幻漂流', y: 2012, g: '剧情 / 奇幻', s: 9.1, line: '与虎同行的漂流，瑰丽又残酷的求生寓言。' },
+        { n: '杀人回忆', y: 2003, g: '犯罪 / 悬疑', s: 8.9, line: '韩国犯罪片巅峰，凶手至今成谜。' },
+        { n: '恐怖直播', y: 2013, g: '悬疑 / 惊悚', s: 8.8, line: '一通电话连线直播，把整个国家炸了锅。' },
+        { n: '记忆碎片', y: 2000, g: '悬疑 / 犯罪', s: 8.7, line: '只能记住十分钟的人如何复仇？倒着讲给你听。' },
+        { n: '迷魂记', y: 1958, g: '悬疑 / 爱情', s: 8.7, line: '希区柯克最私人、最令人着迷的眩晕。' },
+        { n: '心迷宫', y: 2014, g: '悬疑 / 犯罪', s: 8.7, line: '一具尸体在小村庄转了一圈，国产独立片的惊喜。' }
+      ];
+      (function () {
+        var d = new Date();
+        var day = Math.floor(d.setHours(0, 0, 0, 0) / 86400000);
+        var today = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+        var mi = day % MOVIE_POOL.length;
+        var m = MOVIE_POOL[mi];
+        document.getElementById('mvDate').textContent = '今日推荐 · 第 ' + (mi + 1) + ' / ' + MOVIE_POOL.length + ' 部 · ' + today;
+        document.getElementById('mvPickName').innerHTML = m.n + ' <span class="movie-score">' + m.s.toFixed(1) + '</span>';
+        document.getElementById('mvPickMeta').textContent = m.y + ' · ' + m.g;
+        document.getElementById('mvPickLine').textContent = '「' + m.line + '」';
+
+        var KEY = 'myMovies';
+        var list = [];
+        try { list = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { list = []; }
+        var listEl = document.getElementById('movieList');
+        var dateEl = document.getElementById('mvDateInput');
+        var nameEl = document.getElementById('mvNameInput');
+        var thEl = document.getElementById('mvThought');
+        dateEl.value = today;
+
+        function save() { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} }
+        function render() {
+          listEl.innerHTML = '';
+          if (!list.length) {
+            var li = document.createElement('li');
+            li.className = 'movie-empty';
+            li.textContent = '还没有记录，看完电影来登记第一部吧～';
+            listEl.appendChild(li);
+            return;
+          }
+          list.forEach(function (m) {
+            var li = document.createElement('li');
+            li.className = 'movie-item';
+            var head = document.createElement('div');
+            head.className = 'mv-head';
+            var nm = document.createElement('span');
+            nm.className = 'mv-name';
+            nm.textContent = m.name;
+            var tm = document.createElement('span');
+            tm.className = 'mv-time';
+            tm.textContent = m.date;
+            var del = document.createElement('button');
+            del.className = 'mv-del';
+            del.type = 'button';
+            del.title = '删除';
+            del.textContent = '✕';
+            del.dataset.id = m.id;
+            head.appendChild(nm);
+            head.appendChild(tm);
+            head.appendChild(del);
+            var th = document.createElement('p');
+            th.className = 'mv-thought';
+            th.textContent = m.thought || '';
+            if (!m.thought) { th.style.display = 'none'; }
+            li.appendChild(head);
+            li.appendChild(th);
+            listEl.appendChild(li);
+          });
+        }
+        render();
+
+        document.getElementById('movieForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var name = nameEl.value.trim();
+          if (!name || !dateEl.value) return;
+          list.unshift({ id: Date.now(), name: name, date: dateEl.value, thought: thEl.value.trim() });
+          save();
+          render();
+          nameEl.value = '';
+          thEl.value = '';
+        });
+        listEl.addEventListener('click', function (e) {
+          var del = e.target.closest ? e.target.closest('.mv-del') : null;
+          if (!del) return;
+          list = list.filter(function (m) { return String(m.id) !== del.dataset.id; });
+          save();
+          render();
+        });
+      })();
+    </script>
+    
+</main>
+</div>
+
+</body>
+</html>
