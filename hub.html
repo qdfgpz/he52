@@ -75,38 +75,101 @@
     
 </main>
 </div>
+<script src="news-data.js"></script>
 <script>
       document.getElementById('hubDate').textContent = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+
+      /* ===== 实时刷新：调用后端 /api/news 接口 ===== */
       (function () {
-        var boxes = { ai: 'live-ai', nba: 'live-nba', thu: 'live-thu', csgo: 'live-csgo' };
+        var btn = document.getElementById('hubRefreshBtn');
+        var statusEl = document.getElementById('hubStatus');
         var emptyMsg = {
           ai: '今日重磅还没送到，先用下面渠道直达～',
           nba: '今天没有新战报（可能休赛日），点下面渠道看最新动态',
           thu: '今天暂无新发布，点下面渠道看最新进展',
           csgo: '今日重磅还没送到，先用下面渠道直达～'
         };
-        var d = new Date();
-        var today = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-        var hasData = (typeof DAILY_NEWS !== 'undefined');
-        for (var k in boxes) {
-          var el = document.getElementById(boxes[k]);
-          if (!el) continue;
-          var items = (hasData && DAILY_NEWS[k]) ? DAILY_NEWS[k] : [];
-          var html = '<li class="hub-live-title">⚡ 今日要闻</li>';
-          if (items.length) {
-            for (var i = 0; i < items.length; i++) {
-              html += '<li><a href="' + items[i].u + '" target="_blank" rel="noopener noreferrer"></a></li>';
-            }
-            if (hasData && DAILY_NEWS.date !== today) {
-              html += '<li class="hub-stale">情报更新于 ' + DAILY_NEWS.date + '（今天还没更新）</li>';
-            }
+        var failMsg = '这个源暂时拉取失败，稍后再点一次试试';
+
+        function renderBox(k, items, failed) {
+          var el = document.getElementById('live-' + k);
+          if (!el) return;
+          el.innerHTML = '<li class="hub-live-title">⚡ 今日要闻</li>';
+          if (items && items.length) {
+            el.insertAdjacentHTML('beforeend', items.map(function () {
+              return '<li><a target="_blank" rel="noopener noreferrer"></a></li>';
+            }).join(''));
+            var as = el.querySelectorAll('a');
+            for (var i = 0; i < as.length; i++) { as[i].href = items[i].u; as[i].textContent = items[i].t; }
           } else {
-            html += '<li class="hub-stale">' + emptyMsg[k] + '</li>';
+            var li = document.createElement('li');
+            li.className = 'hub-stale';
+            li.textContent = failed ? failMsg : emptyMsg[k];
+            el.appendChild(li);
           }
-          el.innerHTML = html;
-          var as = el.querySelectorAll('a');
-          for (var j = 0; j < as.length; j++) as[j].textContent = items[j].t;
         }
+
+        function renderFallback() {
+          var hasData = (typeof DAILY_NEWS !== 'undefined');
+          var d = new Date();
+          var today = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+          var boxes = { ai: 'live-ai', nba: 'live-nba', thu: 'live-thu', csgo: 'live-csgo' };
+          for (var k in boxes) {
+            var items = (hasData && DAILY_NEWS[k]) ? DAILY_NEWS[k] : [];
+            var el = document.getElementById(boxes[k]);
+            el.innerHTML = '<li class="hub-live-title">⚡ 今日要闻</li>';
+            if (items.length) {
+              for (var i = 0; i < items.length; i++) {
+                el.insertAdjacentHTML('beforeend', '<li><a href="' + items[i].u + '" target="_blank" rel="noopener noreferrer"></a></li>');
+              }
+              var as = el.querySelectorAll('a');
+              for (var j = 0; j < as.length; j++) as[j].textContent = items[j].t;
+              if (hasData && DAILY_NEWS.date !== today) {
+                el.insertAdjacentHTML('beforeend', '<li class="hub-stale">情报更新于 ' + DAILY_NEWS.date + '（今天还没更新）</li>');
+              }
+            } else {
+              el.insertAdjacentHTML('beforeend', '<li class="hub-stale">' + emptyMsg[k] + '</li>');
+            }
+          }
+        }
+
+        function todayStr() {
+          var d = new Date();
+          return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+        }
+
+        function refreshAll() {
+          btn.disabled = true;
+          statusEl.textContent = '实时拉取中…';
+          fetch('/api/news').then(function (r) { return r.json(); }).then(function (d) {
+            ['ai', 'nba', 'thu', 'csgo'].forEach(function (k) {
+              renderBox(k, d[k] || [], (d.failed || []).indexOf(k) >= 0);
+            });
+            statusEl.textContent = '已实时更新 ' + d.updated;
+            try { localStorage.setItem('hubRealtime', JSON.stringify({ date: d.date, time: d.updated, data: d })); } catch (e) {}
+            btn.disabled = false;
+          }).catch(function () {
+            statusEl.textContent = '后端未启动？请先运行 start.bat';
+            btn.disabled = false;
+            renderFallback();
+          });
+        }
+
+        // 先显示当天缓存（若有），再自动实时拉取一次（后端 10 分钟缓存，不频繁打扰数据源）
+        var hadCache = false;
+        try {
+          var cached = JSON.parse(localStorage.getItem('hubRealtime'));
+          if (cached && cached.date === todayStr() && cached.data) {
+            hadCache = true;
+            ['ai', 'nba', 'thu', 'csgo'].forEach(function (k) {
+              renderBox(k, cached.data[k] || [], (cached.failed || []).indexOf(k) >= 0);
+            });
+            statusEl.textContent = '已实时更新 ' + cached.time;
+          }
+        } catch (e) {}
+
+        btn.addEventListener('click', refreshAll);
+        refreshAll();
       })();
     </script>
 </body>
