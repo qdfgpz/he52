@@ -183,4 +183,9 @@ app.mount("/", StaticFiles(directory=MY_DIR), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8898)
+    try:
+        uvicorn.run(app, host="127.0.0.1", port=8898)
+    except OSError:
+        print("端口 8898 已被占用——服务可能已经在运行。")
+        print("浏览器直接访问 http://127.0.0.1:8898/test1.html 即可。")
+        input("按回车键关闭本窗口...")
