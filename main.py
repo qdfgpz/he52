@@ -25,6 +25,8 @@ HEADERS = {"User-Agent": UA, "Referer": "https://www.bilibili.com/"}
 
 CACHE_TTL = 600  # 秒：10 分钟内直接返回缓存
 _cache_lock = threading.Lock()
+_refresh_lock = threading.Lock()
+_refreshing = {"v": False}
 _cache = {"data": None, "ts": 0.0}
 
 JUNK = re.compile(r"聚焦赛场|同步全球|实时查看|实时赛事|随时追踪|赛场焦点|获取最新|点击观看|限时领取|全网最低|一键三连|合集.*全集|完整版")
@@ -134,17 +136,8 @@ def fetch_source(client: httpx.Client, kind: str) -> tuple:
     return kind, [], True
 
 
-@app.get("/api/news", summary="实时抓取四个板块的要闻")
-def get_news(force: int = 0):
-    """AI(24h) / NBA(36h) / 清华科研(72h) / CS:GO(72h)，各源独立容错。
-    10 分钟内重复调用直接返回缓存；?force=1 强制重新抓取。"""
-    now_ts = time.time()
-    with _cache_lock:
-        cached = _cache["data"]
-        ts = _cache["ts"]
-    if cached and not force and now_ts - ts < CACHE_TTL:
-        return cached
-
+def fetch_all() -> dict:
+    """并发抓取全部数据源，返回聚合结果"""
     keys = ["ai", "nba", "thu", "csgo_hltv", "csgo_up"]
     data = {}
     with httpx.Client(headers=HEADERS, timeout=12, follow_redirects=True) as client:
@@ -157,7 +150,7 @@ def get_news(force: int = 0):
     failed = [k for k in ["ai", "nba", "thu"] if data[k]["failed"] and not data[k]["items"]]
     if not csgo and (data["csgo_hltv"]["failed"] or data["csgo_up"]["failed"]):
         failed.append("csgo")
-    result = {
+    return {
         "date": now.strftime("%Y-%m-%d"),
         "updated": now.strftime("%H:%M"),
         "ai": data["ai"]["items"],
@@ -166,6 +159,47 @@ def get_news(force: int = 0):
         "csgo": csgo,
         "failed": failed,
     }
+
+
+@app.get("/api/news", summary="实时抓取四个板块的要闻")
+def get_news(force: int = 0):
+    """AI(24h) / NBA(36h) / 清华科研(72h) / CS:GO(72h)，各源独立容错。
+    10 分钟内的调用直接返回缓存；缓存过期时立即返回旧数据并在后台刷新
+    （Stale-While-Revalidate），用户永远不用对着白屏等待。?force=1 强制同步抓取。"""
+    now_ts = time.time()
+    with _cache_lock:
+        cached = _cache["data"]
+        ts = _cache["ts"]
+
+    if cached and not force and now_ts - ts < CACHE_TTL:
+        return cached
+
+    # 有旧数据：立即返回 + 后台刷新（不打扰用户）
+    if cached:
+        with _refresh_lock:
+            if _refreshing["v"]:
+                return {**cached, "refreshing": True}
+            _refreshing["v"] = True
+
+        def bg():
+            try:
+                fresh = fetch_all()
+                with _cache_lock:
+                    _cache["data"] = fresh
+                    _cache["ts"] = time.time()
+            finally:
+                with _refresh_lock:
+                    _refreshing["v"] = False
+
+        threading.Thread(target=bg, daemon=True).start()
+        return {**cached, "refreshing": True}
+
+    # 无任何缓存：同步抓取（首次访问，等一下值得）
+    result = fetch_all()
+    with _cache_lock:
+        _cache["data"] = result
+        _cache["ts"] = time.time()
+    return result
     with _cache_lock:
         _cache["data"] = result
         _cache["ts"] = time.time()
