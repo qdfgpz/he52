@@ -5,24 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>每日哲学 · Still Here</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body id="top">
 <div class="page-wrap">
-<aside class="site-side">
-<div class="site-brand">🏛 Still Here</div>
-<ul class="site-nav">
-<li><a href="test1.html">🏠 首页 · 待办</a></li>
-<li><a href="hub.html">📰 每日情报站</a></li>
-<li><a class="cur" href="philosophy.html">🧠 每日哲学</a></li>
-<li><a href="movies.html">🎬 电影片单</a></li>
-<li><a href="books.html">📚 书单</a></li>
-<li><a href="mao.html">📕 每日毛选</a></li>
-<li><a href="greek.html">🏛️ 古希腊文明</a></li>
-<li><a href="about friends.html">👥 关于我的朋友们</a></li>
-</ul>
-
-<a class="side-contact" href="mailto:your-email@example.com">✉️ 联系我</a>
-</aside>
+<aside class="site-side"></aside>
+<script src="nav.js"></script>
 <main class="site-main">
 <!-- ===== 模块三：每日哲学 ===== -->
     <section class="ph-section" id="philosophy">
@@ -37,69 +25,6 @@
         <span class="ph-vtag">哔哩哔哩</span><span class="ph-vtitle" id="phVideoTitle"></span>
       </a>
     </section>
-    <script>
-      /* ===== 情报站实时刷新：调用后端 /api/news 接口 ===== */
-      (function () {
-        var btn = document.getElementById('hubRefreshBtn');
-        var statusEl = document.getElementById('hubStatus');
-        var emptyMsg = {
-          ai: '今日重磅还没送到，先用下面渠道直达～',
-          nba: '今天没有新战报（可能休赛日），点下面渠道看最新动态',
-          thu: '今天暂无新发布，点下面渠道看最新进展',
-          csgo: '今日重磅还没送到，先用下面渠道直达～'
-        };
-        var failMsg = '这个源暂时拉取失败，稍后再点一次试试';
-
-        function renderBox(k, items, failed) {
-          var el = document.getElementById('live-' + k);
-          if (!el) return;
-          el.innerHTML = '<li class="hub-live-title">⚡ 今日要闻</li>';
-          if (items && items.length) {
-            el.insertAdjacentHTML('beforeend', items.map(function () {
-              return '<li><a target="_blank" rel="noopener noreferrer"></a></li>';
-            }).join(''));
-            var as = el.querySelectorAll('a');
-            for (var i = 0; i < as.length; i++) { as[i].href = items[i].u; as[i].textContent = items[i].t; }
-          } else {
-            var li = document.createElement('li');
-            li.className = 'hub-stale';
-            li.textContent = failed ? failMsg : emptyMsg[k];
-            el.appendChild(li);
-          }
-        }
-
-        function refreshAll() {
-          btn.disabled = true;
-          statusEl.textContent = '实时拉取中…';
-          fetch('/api/news').then(function (r) { return r.json(); }).then(function (d) {
-            ['ai', 'nba', 'thu', 'csgo'].forEach(function (k) {
-              renderBox(k, d[k] || [], (d.failed || []).indexOf(k) >= 0);
-            });
-            statusEl.textContent = '已实时更新 ' + d.updated;
-            try { localStorage.setItem('hubRealtime', JSON.stringify({ date: d.date, time: d.updated, data: d })); } catch (e) {}
-            btn.disabled = false;
-          }).catch(function () {
-            statusEl.textContent = '后端未启动？请先运行 python main.py';
-            btn.disabled = false;
-          });
-        }
-
-        function todayStr() {
-          var d = new Date();
-          return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-        }
-
-        try {
-          var cached = JSON.parse(localStorage.getItem('hubRealtime'));
-          if (cached && cached.date === todayStr() && cached.data) {
-            Object.keys(cached.data).forEach(function (k) { renderBox(k, cached.data[k], false); });
-            statusEl.textContent = '已实时更新 ' + cached.time;
-          }
-        } catch (e) {}
-
-        btn.addEventListener('click', refreshAll);
-      })();
-    </script>
     <script src="philosophy-data.js"></script>
     <script>
       var PHILOSOPHY_POOL = [

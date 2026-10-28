@@ -72,3 +72,23 @@
 ## 回滚方式
 
 全部改动在 git 提交里：`git reset --hard <基线快照提交>` 即可完全回到优化前状态。
+
+---
+
+## 执行结果（2026-10-28 实测）
+
+计划全部完成，另有 **两个执行中新发现并一并处理的问题**：
+
+1. **philosophy.html 内混入情报站刷新脚本的完整副本**（拆页工具复制残留），引用了本页不存在的按钮，每次加载抛 TypeError——已整段删除。
+2. **目录里原本就存在一个 index.html**（"李晓明 · 个人主页"，拆站前的第一版单页设计，无任何页面链接到它）——已改名为 `old-home.html` 保留（去留由作者决定，不需要可删除；基线提交里也有原始版本），把 `index.html` 名称让给现首页。
+
+验证清单全部通过：
+
+- [x] `uvicorn main:app --port 8899` 启动无异常，lifespan 预热生效
+- [x] `/`、`/index.html`、7 个页面、`/old-home.html`、`/nav.js`、`/favicon.svg` 全部 200
+- [x] `/test1.html` 301 跳转到 `/`
+- [x] `/api/news` 返回合法 JSON：B 站 NBA 源被限流（412）时 ESPN 赛程兜底生效（`nba_is_schedule: true`，4 条），清华/CS:GO 板块抓到真实数据，`failed` 字段正确标记；二次调用走 10 分钟缓存
+- [x] 抓取失败日志正常输出：`[fetch] nba 拉取失败: RuntimeError('rate-limited (412 / 52 bytes)')`
+- [x] 浏览器实测 index / hub / about-friends / mao：侧边栏 8 个链接注入正常、当前页高亮正确、毛选页 40 篇章节目录完整保留（顺序：站点导航 → 章节目录）
+- [x] 桌面快捷方式已重新生成，指向 `launch.pyw`
+- [x] 全仓 grep 无 `my-website`、`about friends.html`、`test1.html` 残留引用（`test1.jpg` 图片除外）

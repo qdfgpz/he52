@@ -2,24 +2,27 @@
 """
 Still Here 个人网站后端
 - 唯一 API 接口：GET /api/news  —— 实时抓取四个情报源并过滤，返回干净 JSON
-- 同时托管前端静态文件（test1.html、图片、数据文件）
-启动：python main.py  →  http://127.0.0.1:8898/test1.html
+- 同时托管前端静态文件（index.html、图片、数据文件）
+启动：python main.py  →  http://127.0.0.1:8898/
 接口文档：http://127.0.0.1:8898/docs
 """
 import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import httpx
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-MY_DIR = r"C:\Users\LEOVO\.zcode\workspace\default\my-website"
+# 项目根目录：以本文件位置定位，项目挪到哪都能跑
+BASE_DIR = Path(__file__).resolve().parent
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 HEADERS = {
     "User-Agent": UA,
@@ -41,7 +44,24 @@ THU_PRI = re.compile(r"AI|人工智能|大模型|机器人|芯片|半导|核|原
 BILI_SEARCH = "https://api.bilibili.com/x/web-interface/search/type"
 ESPN_HEAT_SCHEDULE = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/mia/schedule"
 
-app = FastAPI(title="Still Here 情报站", description="每日要闻实时抓取接口")
+def _warm_cache():
+    """启动预热：服务一起来就后台抓一次，消除重启后首次访问的长等待"""
+    try:
+        fresh = fetch_all()
+        with _cache_lock:
+            _cache["data"] = fresh
+            _cache["ts"] = time.time()
+    except Exception as e:
+        print("warm-up failed:", repr(e), flush=True)
+
+
+@asynccontextmanager
+async def lifespan(_app):
+    threading.Thread(target=_warm_cache, daemon=True).start()
+    yield
+
+
+app = FastAPI(title="Still Here 情报站", description="每日要闻实时抓取接口", lifespan=lifespan)
 
 
 def clean(s: str) -> str:
@@ -164,8 +184,8 @@ def fetch_source(client: httpx.Client, kind: str) -> tuple:
                 if len(out) >= 4:
                     break
             return kind, out, False
-    except Exception:
-        pass
+    except Exception as e:
+        print("[fetch] %s 拉取失败: %r" % (kind, e), flush=True)
     return kind, [], True
 
 
@@ -241,19 +261,21 @@ def get_news(force: int = 0):
         _cache["data"] = result
         _cache["ts"] = time.time()
     return result
-    with _cache_lock:
-        _cache["data"] = result
-        _cache["ts"] = time.time()
-    return result
 
 
 @app.get("/", include_in_schema=False)
 def home():
-    return FileResponse(MY_DIR + r"\test1.html")
+    return FileResponse(BASE_DIR / "index.html")
+
+
+@app.get("/test1.html", include_in_schema=False)
+def old_home():
+    """旧地址跳转，历史书签不失效"""
+    return RedirectResponse("/", status_code=301)
 
 
 # 静态文件兜底（图片、news-data.js、philosophy-data.js 等），必须最后挂载
-app.mount("/", StaticFiles(directory=MY_DIR), name="static")
+app.mount("/", StaticFiles(directory=BASE_DIR), name="static")
 
 
 if __name__ == "__main__":
@@ -262,5 +284,8 @@ if __name__ == "__main__":
         uvicorn.run(app, host="127.0.0.1", port=8898)
     except OSError:
         print("端口 8898 已被占用——服务可能已经在运行。")
-        print("浏览器直接访问 http://127.0.0.1:8898/test1.html 即可。")
-        input("按回车键关闭本窗口...")
+        print("浏览器直接访问 http://127.0.0.1:8898/ 即可。")
+        try:
+            input("按回车键关闭本窗口...")
+        except EOFError:
+            pass

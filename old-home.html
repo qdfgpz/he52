@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- ✏️ 浏览器标签页上显示的标题 -->
+  <title>李晓明 · 个人主页</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --bg-soft: #171a2e;
+      --card: #1c2038;
+      --border: #2a2f52;
+      --text: #e8eaf6;
+      --text-dim: #9aa1c0;
+      --accent: #6c8cff;
+      --accent2: #38e0c8;
+      --radius: 14px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+      overflow-x: hidden;
+    }
+
+    /* 背景装饰光斑 */
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      filter: blur(140px);
+      opacity: 0.22;
+      z-index: -1;
+    }
+    body::before { background: var(--accent);  top: -160px; left: -120px; }
+    body::after  { background: var(--accent2); bottom: -180px; right: -120px; }
+
+    section { scroll-margin-top: 90px; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+    /* ===== 导航栏 ===== */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 18px 0;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(15, 18, 32, 0.85);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 1px 0 var(--border);
+    }
+    nav .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: 1px;
+    }
+    .logo span { color: var(--accent2); }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ===== 首屏 ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      text-align: center;
+    }
+    .hero .container { width: 100%; }
+    .hello {
+      display: inline-block;
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(2.6rem, 7vw, 4.6rem);
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .typeline {
+      margin-top: 18px;
+      font-size: 1.2rem;
+      color: var(--text-dim);
+      min-height: 2em;
+    }
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.2em;
+      background: var(--accent2);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .hero-actions { margin-top: 36px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 12px 28px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #0f1220;
+      font-weight: 600;
+    }
+    .btn-primary:hover { box-shadow: 0 8px 24px rgba(108, 140, 255, 0.35); }
+    .btn-ghost {
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-ghost:hover { border-color: var(--accent); }
+
+    /* ===== 通用小节 ===== */
+    .section { padding: 90px 0; }
+    .section-title {
+      font-size: 1.9rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .section-title::before {
+      content: "";
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      margin-right: 12px;
+      vertical-align: middle;
+    }
+    .section-sub { color: var(--text-dim); margin-bottom: 40px; }
+
+    /* 进入视口时的淡入效果 */
+    .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ===== 关于我 ===== */
+    .about-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start; }
+    .about-text { color: var(--text-dim); }
+    .about-text strong { color: var(--text); }
+    .skills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .skill {
+      padding: 6px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+
+    /* ===== 项目卡片 ===== */
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.25s, border-color 0.25s;
+    }
+    .card:hover { transform: translateY(-6px); border-color: var(--accent); }
+    .card h3 { font-size: 1.15rem; }
+    .card p { color: var(--text-dim); font-size: 0.95rem; flex: 1; }
+    .card .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .card .tags span {
+      font-size: 0.78rem;
+      color: var(--accent2);
+      background: rgba(56, 224, 200, 0.1);
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+    .card a { color: var(--accent); text-decoration: none; font-size: 0.92rem; }
+    .card a:hover { text-decoration: underline; }
+
+    /* ===== 联系我 ===== */
+    .contact-box {
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 32px;
+      text-align: center;
+    }
+    .contact-box p { color: var(--text-dim); margin: 10px 0 28px; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+    }
+
+    /* ===== 手机端适配 ===== */
+    @media (max-width: 760px) {
+      .about-grid, .cards { grid-template-columns: 1fr; }
+      .nav-links { gap: 18px; }
+    }
+  </style>
+</head>
+<body id="top">
+
+  <nav id="navbar">
+    <div class="container">
+      <!-- ✏️ 改成你的名字缩写 -->
+      <a class="logo" href="#top">晓<span>明</span>.</a>
+      <div class="nav-links">
+        <a href="#about">关于</a>
+        <a href="#projects">项目</a>
+        <a href="#contact">联系</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== 首屏 ===== -->
+  <header class="hero">
+    <div class="container">
+      <span class="hello">👋 你好,欢迎来到我的主页</span>
+      <!-- ✏️ 改成你的名字 -->
+      <h1>我是<span class="gradient">李晓明</span></h1>
+      <!-- ✏️ 下面这三句会自动轮播,可以随意修改 -->
+      <p class="typeline"><span id="typewriter"></span><span class="cursor"></span></p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#projects">看看我的作品</a>
+        <a class="btn btn-ghost" href="#contact">联系我</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== 关于我 ===== -->
+  <section id="about" class="section">
+    <div class="container">
+      <h2 class="section-title reveal">关于我</h2>
+      <p class="section-sub reveal">一段简单的自我介绍</p>
+      <div class="about-grid">
+        <!-- ✏️ 自我介绍文字,想怎么改都行 -->
+        <div class="about-text reveal">
+          <p>你好!我是李晓明,一名<strong>计算机专业的学生</strong>。</p>
+          <p>我喜欢把脑子里的想法做成能点能用的网页,平时会写一些小工具、小博客。这个页面就是我自己写的第一个网页 —— 如果你也想做一个,其实只需要一个文本编辑器就够了。</p>
+          <p>不写代码的时候,我喜欢摄影、跑步和折腾各种新软件。</p>
+        </div>
+        <!-- ✏️ 会的技术 / 兴趣,随意增删 -->
+        <div class="skills reveal">
+          <span class="skill">HTML / CSS</span>
+          <span class="skill">JavaScript</span>
+          <span class="skill">Python</span>
+          <span class="skill">Git</span>
+          <span class="skill">摄影 📷</span>
+          <span class="skill">跑步 🏃</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 项目 / 作品 ===== -->
+  <section id="projects" class="section">
+    <div class="container">
+      <h2 class="section-title reveal">我的作品</h2>
+      <p class="section-sub reveal">做过的一些小东西</p>
+      <div class="cards">
+        <!-- ✏️ 每张卡片是一个项目,复制一整个 <div class="card"> 就能加一个 -->
+        <div class="card reveal">
+          <h3>📝 个人博客</h3>
+          <p>用 Markdown 记录学习和生活,自动生成网页,部署在 GitHub Pages 上。</p>
+          <div class="tags"><span>HTML</span><span>CSS</span><span>GitHub Pages</span></div>
+          <a href="#">查看详情 →</a>
+        </div>
+        <div class="card reveal">
+          <h3>🌤️ 天气小工具</h3>
+          <p>输入城市名就能查未来三天的天气,练手调用公共 API 的小项目。</p>
+          <div class="tags"><span>JavaScript</span><span>API</span></div>
+          <a href="#">查看详情 →</a>
+        </div>
+        <div class="card reveal">
+          <h3>✅ 待办清单</h3>
+          <p>一个能添加、勾选、删除任务的清单,数据存在浏览器里,刷新也不丢。</p>
+          <div class="tags"><span>JavaScript</span><span>localStorage</span></div>
+          <a href="#">查看详情 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 联系我 ===== -->
+  <section id="contact" class="section">
+    <div class="container">
+      <div class="contact-box reveal">
+        <h2 class="section-title" style="text-align:left; display:inline-block;">联系我</h2>
+        <p>有问题、有想法,或者只是想打个招呼,都欢迎找我 👇</p>
+        <div class="hero-actions" style="margin-top:0;">
+          <!-- ✏️ 换成你自己的邮箱和 GitHub -->
+          <a class="btn btn-primary" href="mailto:you@example.com">✉️ 发邮件</a>
+          <a class="btn btn-ghost" href="https://github.com/yourname" target="_blank">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <!-- ✏️ 改成你的名字 -->
+    <div class="container">© <span id="year"></span> 李晓明 · 用一个 HTML 文件写成 · <a href="#top" style="color:var(--accent); text-decoration:none;">回到顶部 ↑</a></div>
+  </footer>
+
+  <script>
+    // 打字机效果:轮流显示下面几句话
+    const phrases = [
+      "正在学习编程 💻",
+      "喜欢把想法做成网页 🛠️",
+      "这是我的第一个网站 🚀"
+    ];
+    const el = document.getElementById("typewriter");
+    let pi = 0, ci = 0, deleting = false;
+    function tick() {
+      const text = phrases[pi];
+      el.textContent = text.slice(0, ci);
+      if (!deleting) {
+        if (ci < text.length) { ci++; setTimeout(tick, 110); }
+        else { deleting = true; setTimeout(tick, 1800); }
+      } else {
+        if (ci > 0) { ci--; setTimeout(tick, 50); }
+        else { deleting = false; pi = (pi + 1) % phrases.length; setTimeout(tick, 400); }
+      }
+    }
+    tick();
+
+    // 页面往下滚动时,元素淡入 + 导航栏加背景
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) e.target.classList.add("visible");
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll(".reveal").forEach((item) => observer.observe(item));
+
+    const nav = document.getElementById("navbar");
+    window.addEventListener("scroll", () => {
+      nav.classList.toggle("scrolled", window.scrollY > 20);
+    });
+
+    // 页脚年份自动更新
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

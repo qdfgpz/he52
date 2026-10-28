@@ -1,373 +1,281 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- ✏️ 浏览器标签页上显示的标题 -->
-  <title>李晓明 · 个人主页</title>
-  <style>
-    :root {
-      --bg: #0f1220;
-      --bg-soft: #171a2e;
-      --card: #1c2038;
-      --border: #2a2f52;
-      --text: #e8eaf6;
-      --text-dim: #9aa1c0;
-      --accent: #6c8cff;
-      --accent2: #38e0c8;
-      --radius: 14px;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.8;
-      overflow-x: hidden;
-    }
-
-    /* 背景装饰光斑 */
-    body::before, body::after {
-      content: "";
-      position: fixed;
-      width: 480px; height: 480px;
-      border-radius: 50%;
-      filter: blur(140px);
-      opacity: 0.22;
-      z-index: -1;
-    }
-    body::before { background: var(--accent);  top: -160px; left: -120px; }
-    body::after  { background: var(--accent2); bottom: -180px; right: -120px; }
-
-    section { scroll-margin-top: 90px; }
-    .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
-
-    /* ===== 导航栏 ===== */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 10;
-      padding: 18px 0;
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-    nav.scrolled {
-      background: rgba(15, 18, 32, 0.85);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 1px 0 var(--border);
-    }
-    nav .container { display: flex; align-items: center; justify-content: space-between; }
-    .logo {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--text);
-      text-decoration: none;
-      letter-spacing: 1px;
-    }
-    .logo span { color: var(--accent2); }
-    .nav-links { display: flex; gap: 28px; }
-    .nav-links a {
-      color: var(--text-dim);
-      text-decoration: none;
-      font-size: 0.95rem;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--text); }
-
-    /* ===== 首屏 ===== */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      text-align: center;
-    }
-    .hero .container { width: 100%; }
-    .hello {
-      display: inline-block;
-      padding: 6px 16px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      color: var(--text-dim);
-      font-size: 0.9rem;
-      margin-bottom: 24px;
-    }
-    .hero h1 {
-      font-size: clamp(2.6rem, 7vw, 4.6rem);
-      font-weight: 800;
-      line-height: 1.2;
-    }
-    .hero h1 .gradient {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .typeline {
-      margin-top: 18px;
-      font-size: 1.2rem;
-      color: var(--text-dim);
-      min-height: 2em;
-    }
-    .cursor {
-      display: inline-block;
-      width: 2px;
-      height: 1.2em;
-      background: var(--accent2);
-      vertical-align: text-bottom;
-      margin-left: 2px;
-      animation: blink 1s step-end infinite;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
-
-    .hero-actions { margin-top: 36px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-    .btn {
-      padding: 12px 28px;
-      border-radius: 999px;
-      text-decoration: none;
-      font-size: 1rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .btn:hover { transform: translateY(-2px); }
-    .btn-primary {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      color: #0f1220;
-      font-weight: 600;
-    }
-    .btn-primary:hover { box-shadow: 0 8px 24px rgba(108, 140, 255, 0.35); }
-    .btn-ghost {
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-    .btn-ghost:hover { border-color: var(--accent); }
-
-    /* ===== 通用小节 ===== */
-    .section { padding: 90px 0; }
-    .section-title {
-      font-size: 1.9rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .section-title::before {
-      content: "";
-      display: inline-block;
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      margin-right: 12px;
-      vertical-align: middle;
-    }
-    .section-sub { color: var(--text-dim); margin-bottom: 40px; }
-
-    /* 进入视口时的淡入效果 */
-    .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s ease; }
-    .reveal.visible { opacity: 1; transform: none; }
-
-    /* ===== 关于我 ===== */
-    .about-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start; }
-    .about-text { color: var(--text-dim); }
-    .about-text strong { color: var(--text); }
-    .skills { display: flex; flex-wrap: wrap; gap: 10px; }
-    .skill {
-      padding: 6px 14px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      font-size: 0.9rem;
-    }
-
-    /* ===== 项目卡片 ===== */
-    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 26px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: transform 0.25s, border-color 0.25s;
-    }
-    .card:hover { transform: translateY(-6px); border-color: var(--accent); }
-    .card h3 { font-size: 1.15rem; }
-    .card p { color: var(--text-dim); font-size: 0.95rem; flex: 1; }
-    .card .tags { display: flex; flex-wrap: wrap; gap: 8px; }
-    .card .tags span {
-      font-size: 0.78rem;
-      color: var(--accent2);
-      background: rgba(56, 224, 200, 0.1);
-      padding: 2px 10px;
-      border-radius: 999px;
-    }
-    .card a { color: var(--accent); text-decoration: none; font-size: 0.92rem; }
-    .card a:hover { text-decoration: underline; }
-
-    /* ===== 联系我 ===== */
-    .contact-box {
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 48px 32px;
-      text-align: center;
-    }
-    .contact-box p { color: var(--text-dim); margin: 10px 0 28px; }
-
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 28px 0;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 0.88rem;
-    }
-
-    /* ===== 手机端适配 ===== */
-    @media (max-width: 760px) {
-      .about-grid, .cards { grid-template-columns: 1fr; }
-      .nav-links { gap: 18px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>首页 · 待办清单 · Still Here</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body id="top">
+<div class="page-wrap">
+<aside class="site-side"></aside>
+<script src="nav.js"></script>
+<main class="site-main">
+<!-- ===== 网站开场白 ===== -->
+    <header class="site-intro">
+      <h1>期待佛光普照</h1>
+      <p>orz这是一次尝试性的编写，创建了一个个人网页</p>
+    </header>
 
-  <nav id="navbar">
-    <div class="container">
-      <!-- ✏️ 改成你的名字缩写 -->
-      <a class="logo" href="#top">晓<span>明</span>.</a>
-      <div class="nav-links">
-        <a href="#about">关于</a>
-        <a href="#projects">项目</a>
-        <a href="#contact">联系</a>
+    
+<!-- ===== 克莱·汤普森名言横幅（每日一格） ===== -->
+    <section class="klay-banner" id="klay">
+      <img class="klay-photo" id="klayPhoto" src="klay.png" alt="克莱·汤普森 Klay Thompson #11">
+      <div class="klay-quote">
+        <div class="klay-mark">“</div>
+        <p class="klay-text" id="klayQuote">I thrive in those types of situations.</p>
+        <p class="klay-cn" id="klayQuoteCn">大场面？那正是我大杀四方的舞台。</p>
+        <p class="klay-author" id="klayAuthor">— 克莱·汤普森 Klay Thompson · #11 · 水花兄弟 Splash Brother</p>
+        <p class="klay-credit" id="klayCredit" style="display:none;"></p>
+        <p class="klay-day" id="klayDay"></p>
       </div>
-    </div>
-  </nav>
+    </section>
+    <script>
+      (function () {
+        // 照片 + 格言轮换池：按日期每天自动换一组；想加新的往数组里追加即可
+        var WALL = [
+          {
+            img: 'klay.png', alt: '克莱持球对阵库里',
+            en: 'I thrive in those types of situations.',
+            cn: '大场面？那正是我大杀四方的舞台。',
+            by: '— 克莱·汤普森 Klay Thompson · #11 · 水花兄弟 Splash Brother',
+            credit: ''
+          },
+          {
+            img: 'klay-shot.jpg', alt: '克莱的经典投篮姿势',
+            en: "It's pretty surreal, and really you just feel like every shot you throw up is going to go in.",
+            cn: '那感觉难以置信——你投出去的每一球，都应声入网。',
+            by: '— 克莱·汤普森，2015年1月23日 · 单节37分之夜',
+            credit: 'Photo: Keith Allison / Wikimedia Commons · CC BY-SA 2.0'
+          },
+          {
+            img: 'klay-run.png', alt: '克莱身穿勇士白色球衣',
+            en: "I'm satisfied with Game 6 Klay. I don't need another nickname.",
+            cn: '“G6 克莱”——这个名字我很满意，不需要别的了。',
+            by: '— 克莱·汤普森，2022年6月 · 总决赛G6赛后',
+            credit: ''
+          },
+          {
+            img: 'klay.jpg', alt: '克莱身穿勇士新年中文球衣',
+            en: "I realize I'm on a really good streak right now of Game 6s... It's obviously a nickname I've earned.",
+            cn: '“G6 克莱”这个绰号，是我用一场场硬仗挣来的。',
+            by: '— 克莱·汤普森，2022年6月 · “G6克莱”',
+            credit: 'Photo: Keith Allison / Wikimedia Commons · CC BY-SA 2.0'
+          }
+        ];
+        var day = Math.floor(new Date().setHours(0, 0, 0, 0) / 86400000);
+        var pick = WALL[day % WALL.length];
+        document.getElementById('klayPhoto').src = pick.img;
+        document.getElementById('klayPhoto').alt = pick.alt;
+        document.getElementById('klayQuote').textContent = pick.en;
+        document.getElementById('klayQuoteCn').textContent = pick.cn;
+        document.getElementById('klayAuthor').textContent = pick.by;
+        var creditEl = document.getElementById('klayCredit');
+        if (pick.credit) { creditEl.textContent = pick.credit; creditEl.style.display = ''; }
+        document.getElementById('klayDay').textContent = '每日一格 · 今天是第 ' + (day % WALL.length + 1) + ' / ' + WALL.length + ' 组';
+      })();
+    </script>
 
-  <!-- ===== 首屏 ===== -->
-  <header class="hero">
-    <div class="container">
-      <span class="hello">👋 你好,欢迎来到我的主页</span>
-      <!-- ✏️ 改成你的名字 -->
-      <h1>我是<span class="gradient">李晓明</span></h1>
-      <!-- ✏️ 下面这三句会自动轮播,可以随意修改 -->
-      <p class="typeline"><span id="typewriter"></span><span class="cursor"></span></p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="#projects">看看我的作品</a>
-        <a class="btn btn-ghost" href="#contact">联系我</a>
-      </div>
-    </div>
-  </header>
+    
+<!-- ===== 模块一：To do list ===== -->
+    <section class="todo-section" id="todo">
+      <h2>📝 To do list</h2>
+      <form class="todo-form" id="todoForm">
+        <input type="text" id="todoText" placeholder="具体事情" maxlength="100" required>
+        <input type="datetime-local" id="todoTime" required>
+        <select id="todoUrgency" title="紧迫度">
+          <option value="high">高</option>
+          <option value="mid" selected>中</option>
+          <option value="low">低</option>
+        </select>
+        <button type="submit">添加</button>
+      </form>
+      <p class="todo-tip">点击事项左侧的圆圈即可切换完成状态；完成的事项会自动排到列表末尾，截止时间超过 24 小时后自动删除。</p>
+      <ul id="todoList"></ul>
+    </section>
 
-  <!-- ===== 关于我 ===== -->
-  <section id="about" class="section">
-    <div class="container">
-      <h2 class="section-title reveal">关于我</h2>
-      <p class="section-sub reveal">一段简单的自我介绍</p>
-      <div class="about-grid">
-        <!-- ✏️ 自我介绍文字,想怎么改都行 -->
-        <div class="about-text reveal">
-          <p>你好!我是李晓明,一名<strong>计算机专业的学生</strong>。</p>
-          <p>我喜欢把脑子里的想法做成能点能用的网页,平时会写一些小工具、小博客。这个页面就是我自己写的第一个网页 —— 如果你也想做一个,其实只需要一个文本编辑器就够了。</p>
-          <p>不写代码的时候,我喜欢摄影、跑步和折腾各种新软件。</p>
-        </div>
-        <!-- ✏️ 会的技术 / 兴趣,随意增删 -->
-        <div class="skills reveal">
-          <span class="skill">HTML / CSS</span>
-          <span class="skill">JavaScript</span>
-          <span class="skill">Python</span>
-          <span class="skill">Git</span>
-          <span class="skill">摄影 📷</span>
-          <span class="skill">跑步 🏃</span>
-        </div>
-      </div>
-    </div>
-  </section>
+    
+</main>
+</div>
+<script>
+      (function () {
+        var KEY = 'stillHereTodos';
+        var DAY = 24 * 60 * 60 * 1000;
+        var listEl = document.getElementById('todoList');
 
-  <!-- ===== 项目 / 作品 ===== -->
-  <section id="projects" class="section">
-    <div class="container">
-      <h2 class="section-title reveal">我的作品</h2>
-      <p class="section-sub reveal">做过的一些小东西</p>
-      <div class="cards">
-        <!-- ✏️ 每张卡片是一个项目,复制一整个 <div class="card"> 就能加一个 -->
-        <div class="card reveal">
-          <h3>📝 个人博客</h3>
-          <p>用 Markdown 记录学习和生活,自动生成网页,部署在 GitHub Pages 上。</p>
-          <div class="tags"><span>HTML</span><span>CSS</span><span>GitHub Pages</span></div>
-          <a href="#">查看详情 →</a>
-        </div>
-        <div class="card reveal">
-          <h3>🌤️ 天气小工具</h3>
-          <p>输入城市名就能查未来三天的天气,练手调用公共 API 的小项目。</p>
-          <div class="tags"><span>JavaScript</span><span>API</span></div>
-          <a href="#">查看详情 →</a>
-        </div>
-        <div class="card reveal">
-          <h3>✅ 待办清单</h3>
-          <p>一个能添加、勾选、删除任务的清单,数据存在浏览器里,刷新也不丢。</p>
-          <div class="tags"><span>JavaScript</span><span>localStorage</span></div>
-          <a href="#">查看详情 →</a>
-        </div>
-      </div>
-    </div>
-  </section>
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function toInputValue(d) {
+          return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+                 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+        function fmtTime(str) {
+          var d = new Date(str);
+          return (d.getMonth() + 1) + '月' + pad(d.getDate()) + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+        function load() {
+          try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+          catch (e) { return []; }
+        }
+        function save() {
+          try { localStorage.setItem(KEY, JSON.stringify(todos)); } catch (e) {}
+        }
 
-  <!-- ===== 联系我 ===== -->
-  <section id="contact" class="section">
-    <div class="container">
-      <div class="contact-box reveal">
-        <h2 class="section-title" style="text-align:left; display:inline-block;">联系我</h2>
-        <p>有问题、有想法,或者只是想打个招呼,都欢迎找我 👇</p>
-        <div class="hero-actions" style="margin-top:0;">
-          <!-- ✏️ 换成你自己的邮箱和 GitHub -->
-          <a class="btn btn-primary" href="mailto:you@example.com">✉️ 发邮件</a>
-          <a class="btn btn-ghost" href="https://github.com/yourname" target="_blank">GitHub</a>
-        </div>
-      </div>
-    </div>
-  </section>
+        var todos = load();
 
-  <footer>
-    <!-- ✏️ 改成你的名字 -->
-    <div class="container">© <span id="year"></span> 李晓明 · 用一个 HTML 文件写成 · <a href="#top" style="color:var(--accent); text-decoration:none;">回到顶部 ↑</a></div>
-  </footer>
+        // 第一次打开时放三条示例数据方便预览效果；不需要可整段删除
+        var firstRun = false;
+        try { firstRun = localStorage.getItem(KEY) === null; } catch (e) {}
+        if (firstRun && todos.length === 0) {
+          var now = Date.now();
+          todos = [
+            { id: now + 1, text: '示例：完成个人网站的“联系”板块', time: toInputValue(new Date(now + 2 * DAY)), urgency: 'high', done: false },
+            { id: now + 2, text: '示例：预习下周的课程', time: toInputValue(new Date(now + 3 * DAY)), urgency: 'mid', done: false },
+            { id: now + 3, text: '示例：整理书桌', time: toInputValue(new Date(now + 1 * DAY)), urgency: 'low', done: true }
+          ];
+          save();
+        }
 
-  <script>
-    // 打字机效果:轮流显示下面几句话
-    const phrases = [
-      "正在学习编程 💻",
-      "喜欢把想法做成网页 🛠️",
-      "这是我的第一个网站 🚀"
-    ];
-    const el = document.getElementById("typewriter");
-    let pi = 0, ci = 0, deleting = false;
-    function tick() {
-      const text = phrases[pi];
-      el.textContent = text.slice(0, ci);
-      if (!deleting) {
-        if (ci < text.length) { ci++; setTimeout(tick, 110); }
-        else { deleting = true; setTimeout(tick, 1800); }
-      } else {
-        if (ci > 0) { ci--; setTimeout(tick, 50); }
-        else { deleting = false; pi = (pi + 1) % phrases.length; setTimeout(tick, 400); }
-      }
-    }
-    tick();
+        // 截止时间超过 24 小时的事项自动删除（无论是否完成）
+        function cleanExpired() {
+          var now = Date.now();
+          var remain = todos.filter(function (t) {
+            return new Date(t.time).getTime() + DAY > now;
+          });
+          if (remain.length !== todos.length) { todos = remain; save(); }
+        }
 
-    // 页面往下滚动时,元素淡入 + 导航栏加背景
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) e.target.classList.add("visible");
-      });
-    }, { threshold: 0.15 });
-    document.querySelectorAll(".reveal").forEach((item) => observer.observe(item));
+        function remainingText(endMs) {
+          var ms = endMs - Date.now();
+          if (ms <= 0) return '（已逾期）';
+          var h = Math.floor(ms / 3600000);
+          if (h < 1) return '（剩不到 1 小时）';
+          if (h < 48) return '（剩 ' + h + ' 小时）';
+          return '（剩 ' + Math.round(h / 24) + ' 天）';
+        }
 
-    const nav = document.getElementById("navbar");
-    window.addEventListener("scroll", () => {
-      nav.classList.toggle("scrolled", window.scrollY > 20);
-    });
+        function render() {
+          // 未完成的排前面（同组内按截止时间从早到晚），完成的固定沉到最末尾
+          todos.sort(function (a, b) {
+            if (a.done !== b.done) return a.done ? 1 : -1;
+            return new Date(a.time) - new Date(b.time);
+          });
 
-    // 页脚年份自动更新
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+          listEl.innerHTML = '';
+          if (todos.length === 0) {
+            var empty = document.createElement('li');
+            empty.className = 'todo-empty';
+            empty.textContent = '暂无待办，在上面添加一件吧～';
+            listEl.appendChild(empty);
+            return;
+          }
+
+          var hasPending = todos.some(function (t) { return !t.done; });
+          var dividerAdded = false;
+
+          todos.forEach(function (t) {
+            if (t.done && hasPending && !dividerAdded) {
+              var dv = document.createElement('li');
+              dv.className = 'todo-divider';
+              dv.textContent = '—— 已完成 ——';
+              listEl.appendChild(dv);
+              dividerAdded = true;
+            }
+
+            var li = document.createElement('li');
+            li.className = 'todo-item' + (t.done ? ' done' : '');
+
+            var check = document.createElement('span');
+            check.className = 'todo-check';
+            check.dataset.id = t.id;
+            check.title = '点击切换完成状态';
+            check.textContent = '✓';
+
+            var main = document.createElement('div');
+            main.className = 'todo-main';
+
+            var text = document.createElement('div');
+            text.className = 'todo-text';
+            text.textContent = t.text;
+
+            var end = new Date(t.time);
+            var overdue = !t.done && end.getTime() < Date.now();
+            var meta = document.createElement('div');
+            meta.className = 'todo-meta' + (overdue ? ' overdue' : '');
+
+            var badge = document.createElement('span');
+            badge.className = 'badge ' + t.urgency;
+            badge.title = '紧迫度';
+            badge.textContent = t.urgency === 'high' ? '高' : (t.urgency === 'mid' ? '中' : '低');
+
+            var deadline = document.createElement('span');
+            deadline.className = 'todo-deadline';
+            deadline.textContent = '截止 ' + fmtTime(t.time) + (t.done ? '' : remainingText(end.getTime()));
+
+            meta.appendChild(badge);
+            meta.appendChild(deadline);
+            main.appendChild(text);
+            main.appendChild(meta);
+
+            var del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'todo-del';
+            del.dataset.del = t.id;
+            del.title = '删除';
+            del.textContent = '✕';
+
+            li.appendChild(check);
+            li.appendChild(main);
+            li.appendChild(del);
+            listEl.appendChild(li);
+          });
+        }
+
+        document.getElementById('todoForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var textEl = document.getElementById('todoText');
+          var timeEl = document.getElementById('todoTime');
+          var text = textEl.value.trim();
+          if (!text || !timeEl.value) return;
+          todos.push({
+            id: Date.now(),
+            text: text,
+            time: timeEl.value,
+            urgency: document.getElementById('todoUrgency').value,
+            done: false
+          });
+          save();
+          render();
+          textEl.value = '';
+          timeEl.value = toInputValue(new Date(Date.now() + DAY));
+          textEl.focus();
+        });
+
+        listEl.addEventListener('click', function (e) {
+          var check = e.target.closest ? e.target.closest('.todo-check') : null;
+          if (check) {
+            for (var i = 0; i < todos.length; i++) {
+              if (String(todos[i].id) === check.dataset.id) { todos[i].done = !todos[i].done; break; }
+            }
+            save();
+            render();
+            return;
+          }
+          var del = e.target.closest ? e.target.closest('.todo-del') : null;
+          if (del) {
+            todos = todos.filter(function (t) { return String(t.id) !== del.dataset.del; });
+            save();
+            render();
+          }
+        });
+
+        document.getElementById('todoTime').value = toInputValue(new Date(Date.now() + DAY));
+
+        cleanExpired();
+        render();
+        // 页面保持打开时每分钟刷新一次：自动删除过期事项、更新剩余时间
+        setInterval(function () { cleanExpired(); render(); }, 60 * 1000);
+      })();
+    </script>
 </body>
 </html>

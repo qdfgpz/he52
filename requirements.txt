@@ -1,3 +1,4 @@
 fastapi>=0.115
 uvicorn>=0.30
 httpx>=0.27
+pywin32>=306  # 仅 make_shortcut.py（生成桌面快捷方式）需要

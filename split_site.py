@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
-"""把 test1.html 拆分为多页文档站：style.css + 7 个页面"""
+"""【已退役的历史工具】当初把单页 test1.html 拆分为多页文档站（style.css + 7 个页面）。
+拆分早已完成，输入文件也不复存在，仅留档备查；路径已改为相对本文件定位。"""
 import os
+from pathlib import Path
 
-SRC = r'C:\Users\LEOVO\.zcode\workspace\default\my-website\test1.html'
-OUT = r'C:\Users\LEOVO\.zcode\workspace\default\my-website'
+BASE = Path(__file__).resolve().parent
+SRC = str(BASE / 'old-home.html')  # 原单页（拆站前版本，现名 old-home.html）
+OUT = str(BASE)
 
 s = open(SRC, encoding='utf-8').read()
 
