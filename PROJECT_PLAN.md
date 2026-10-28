@@ -90,7 +90,7 @@
 | `about-friends.html` | 朋友页 |
 | `old-home.html` | 旧版单页主页（历史版本，保留备用） |
 | `news-data.js` / `philosophy-data.js` | 兜底数据 |
-| `klay*.png/jpg` | 横幅轮换图（klay.jpg/klay-shot.jpg 为 CC BY-SA 2.0，作者 Keith Allison） |
+| `klay*.webp` / `test1.webp` | 横幅轮换图与朋友页配图（WebP 压缩 277KB，原图存于 git 历史；klay / klay-shot 为 CC BY-SA 2.0，作者 Keith Allison） |
 | `launch.pyw` | 无窗口启动器（快捷方式的后端入口） |
 | `start.bat` | 控制台启动脚本 |
 | `make_shortcut.py` | 重新生成桌面快捷方式 |

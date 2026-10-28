@@ -21,7 +21,7 @@
     
 <!-- ===== 克莱·汤普森名言横幅（每日一格） ===== -->
     <section class="klay-banner" id="klay">
-      <img class="klay-photo" id="klayPhoto" src="klay.png" alt="克莱·汤普森 Klay Thompson #11">
+      <img class="klay-photo" id="klayPhoto" src="klay-hold.webp" alt="克莱·汤普森 Klay Thompson #11">
       <div class="klay-quote">
         <div class="klay-mark">“</div>
         <p class="klay-text" id="klayQuote">I thrive in those types of situations.</p>
@@ -36,28 +36,28 @@
         // 照片 + 格言轮换池：按日期每天自动换一组；想加新的往数组里追加即可
         var WALL = [
           {
-            img: 'klay.png', alt: '克莱持球对阵库里',
+            img: 'klay-hold.webp', alt: '克莱持球对阵库里',
             en: 'I thrive in those types of situations.',
             cn: '大场面？那正是我大杀四方的舞台。',
             by: '— 克莱·汤普森 Klay Thompson · #11 · 水花兄弟 Splash Brother',
             credit: ''
           },
           {
-            img: 'klay-shot.jpg', alt: '克莱的经典投篮姿势',
+            img: 'klay-shot.webp', alt: '克莱的经典投篮姿势',
             en: "It's pretty surreal, and really you just feel like every shot you throw up is going to go in.",
             cn: '那感觉难以置信——你投出去的每一球，都应声入网。',
             by: '— 克莱·汤普森，2015年1月23日 · 单节37分之夜',
             credit: 'Photo: Keith Allison / Wikimedia Commons · CC BY-SA 2.0'
           },
           {
-            img: 'klay-run.png', alt: '克莱身穿勇士白色球衣',
+            img: 'klay-run.webp', alt: '克莱身穿勇士白色球衣',
             en: "I'm satisfied with Game 6 Klay. I don't need another nickname.",
             cn: '“G6 克莱”——这个名字我很满意，不需要别的了。',
             by: '— 克莱·汤普森，2022年6月 · 总决赛G6赛后',
             credit: ''
           },
           {
-            img: 'klay.jpg', alt: '克莱身穿勇士新年中文球衣',
+            img: 'klay.webp', alt: '克莱身穿勇士新年中文球衣',
             en: "I realize I'm on a really good streak right now of Game 6s... It's obviously a nickname I've earned.",
             cn: '“G6 克莱”这个绰号，是我用一场场硬仗挣来的。',
             by: '— 克莱·汤普森，2022年6月 · “G6克莱”',
@@ -105,6 +105,7 @@
         var listEl = document.getElementById('todoList');
 
         function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function uid() { return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7); }
         function toInputValue(d) {
           return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
                  'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
@@ -129,9 +130,9 @@
         if (firstRun && todos.length === 0) {
           var now = Date.now();
           todos = [
-            { id: now + 1, text: '示例：完成个人网站的“联系”板块', time: toInputValue(new Date(now + 2 * DAY)), urgency: 'high', done: false },
-            { id: now + 2, text: '示例：预习下周的课程', time: toInputValue(new Date(now + 3 * DAY)), urgency: 'mid', done: false },
-            { id: now + 3, text: '示例：整理书桌', time: toInputValue(new Date(now + 1 * DAY)), urgency: 'low', done: true }
+            { id: uid(), text: '示例：完成个人网站的“联系”板块', time: toInputValue(new Date(now + 2 * DAY)), urgency: 'high', done: false },
+            { id: uid(), text: '示例：预习下周的课程', time: toInputValue(new Date(now + 3 * DAY)), urgency: 'mid', done: false },
+            { id: uid(), text: '示例：整理书桌', time: toInputValue(new Date(now + 1 * DAY)), urgency: 'low', done: true }
           ];
           save();
         }
@@ -238,7 +239,7 @@
           var text = textEl.value.trim();
           if (!text || !timeEl.value) return;
           todos.push({
-            id: Date.now(),
+            id: uid(),
             text: text,
             time: timeEl.value,
             urgency: document.getElementById('todoUrgency').value,

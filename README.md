@@ -39,5 +39,5 @@ python main.py
 
 ## 图片版权
 
-- `klay.jpg` / `klay-shot.jpg`：Photo by [Keith Allison](https://www.flickr.com/people/27003603@N00) / Wikimedia Commons，CC BY-SA 2.0
-- `klay.png` / `klay-run.png`：网络图片，仅个人学习使用
+- `klay.webp` / `klay-shot.webp`：Photo by [Keith Allison](https://www.flickr.com/people/27003603@N00) / Wikimedia Commons，CC BY-SA 2.0（原始 jpg 存于 git 历史）
+- `klay-hold.webp` / `klay-run.webp`：网络图片，仅个人学习使用

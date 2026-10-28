@@ -503,12 +503,6 @@ body {
 }
 #maoToc button:hover, #gkToc button:hover { background: #fdf6e3; }
 #maoToc button.active, #gkToc button.active { background: #1d428a; color: #fff; font-weight: 600; }
-.side-contact {
-  display: block; margin: 14px 6px 4px; padding: 9px 12px;
-  background: #00897b; color: #fff !important; border-radius: 10px;
-  text-align: center; font-size: 14px; font-weight: 600; text-decoration: none;
-}
-.side-contact:hover { background: #00695c; }
 main.site-main { flex: 1 1 auto; min-width: 0; }
 main.site-main .klay-banner { margin-top: 0; }
 @media (max-width: 960px) {
