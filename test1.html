@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>首页 · 待办清单 · Still Here</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+<div class="page-wrap">
+<aside class="site-side">
+<div class="site-brand">🏛 Still Here</div>
+<ul class="site-nav">
+<li><a class="cur" href="test1.html">🏠 首页 · 待办</a></li>
+<li><a href="hub.html">📰 每日情报站</a></li>
+<li><a href="philosophy.html">🧠 每日哲学</a></li>
+<li><a href="movies.html">🎬 电影片单</a></li>
+<li><a href="books.html">📚 书单</a></li>
+<li><a href="mao.html">📕 每日毛选</a></li>
+<li><a href="greek.html">🏛️ 古希腊文明</a></li>
+<li><a href="about friends.html">👥 关于我的朋友们</a></li>
+</ul>
+
+<a class="side-contact" href="mailto:your-email@example.com">✉️ 联系我</a>
+</aside>
+<main class="site-main">
+<!-- ===== 网站开场白 ===== -->
+    <header class="site-intro">
+      <h1>期待佛光普照</h1>
+      <p>orz这是一次尝试性的编写，创建了一个个人网页</p>
+    </header>
+
+    
+<!-- ===== 克莱·汤普森名言横幅（每日一格） ===== -->
+    <section class="klay-banner" id="klay">
+      <img class="klay-photo" id="klayPhoto" src="klay.png" alt="克莱·汤普森 Klay Thompson #11">
+      <div class="klay-quote">
+        <div class="klay-mark">“</div>
+        <p class="klay-text" id="klayQuote">I thrive in those types of situations.</p>
+        <p class="klay-cn" id="klayQuoteCn">大场面？那正是我大杀四方的舞台。</p>
+        <p class="klay-author" id="klayAuthor">— 克莱·汤普森 Klay Thompson · #11 · 水花兄弟 Splash Brother</p>
+        <p class="klay-credit" id="klayCredit" style="display:none;"></p>
+        <p class="klay-day" id="klayDay"></p>
+      </div>
+    </section>
+    <script>
+      (function () {
+        // 照片 + 格言轮换池：按日期每天自动换一组；想加新的往数组里追加即可
+        var WALL = [
+          {
+            img: 'klay.png', alt: '克莱持球对阵库里',
+            en: 'I thrive in those types of situations.',
+            cn: '大场面？那正是我大杀四方的舞台。',
+            by: '— 克莱·汤普森 Klay Thompson · #11 · 水花兄弟 Splash Brother',
+            credit: ''
+          },
+          {
+            img: 'klay-shot.jpg', alt: '克莱的经典投篮姿势',
+            en: "It's pretty surreal, and really you just feel like every shot you throw up is going to go in.",
+            cn: '那感觉难以置信——你投出去的每一球，都应声入网。',
+            by: '— 克莱·汤普森，2015年1月23日 · 单节37分之夜',
+            credit: 'Photo: Keith Allison / Wikimedia Commons · CC BY-SA 2.0'
+          },
+          {
+            img: 'klay-run.png', alt: '克莱身穿勇士白色球衣',
+            en: "I'm satisfied with Game 6 Klay. I don't need another nickname.",
+            cn: '“G6 克莱”——这个名字我很满意，不需要别的了。',
+            by: '— 克莱·汤普森，2022年6月 · 总决赛G6赛后',
+            credit: ''
+          },
+          {
+            img: 'klay.jpg', alt: '克莱身穿勇士新年中文球衣',
+            en: "I realize I'm on a really good streak right now of Game 6s... It's obviously a nickname I've earned.",
+            cn: '“G6 克莱”这个绰号，是我用一场场硬仗挣来的。',
+            by: '— 克莱·汤普森，2022年6月 · “G6克莱”',
+            credit: 'Photo: Keith Allison / Wikimedia Commons · CC BY-SA 2.0'
+          }
+        ];
+        var day = Math.floor(new Date().setHours(0, 0, 0, 0) / 86400000);
+        var pick = WALL[day % WALL.length];
+        document.getElementById('klayPhoto').src = pick.img;
+        document.getElementById('klayPhoto').alt = pick.alt;
+        document.getElementById('klayQuote').textContent = pick.en;
+        document.getElementById('klayQuoteCn').textContent = pick.cn;
+        document.getElementById('klayAuthor').textContent = pick.by;
+        var creditEl = document.getElementById('klayCredit');
+        if (pick.credit) { creditEl.textContent = pick.credit; creditEl.style.display = ''; }
+        document.getElementById('klayDay').textContent = '每日一格 · 今天是第 ' + (day % WALL.length + 1) + ' / ' + WALL.length + ' 组';
+      })();
+    </script>
+
+    
+<!-- ===== 模块一：To do list ===== -->
+    <section class="todo-section" id="todo">
+      <h2>📝 To do list</h2>
+      <form class="todo-form" id="todoForm">
+        <input type="text" id="todoText" placeholder="具体事情" maxlength="100" required>
+        <input type="datetime-local" id="todoTime" required>
+        <select id="todoUrgency" title="紧迫度">
+          <option value="high">高</option>
+          <option value="mid" selected>中</option>
+          <option value="low">低</option>
+        </select>
+        <button type="submit">添加</button>
+      </form>
+      <p class="todo-tip">点击事项左侧的圆圈即可切换完成状态；完成的事项会自动排到列表末尾，截止时间超过 24 小时后自动删除。</p>
+      <ul id="todoList"></ul>
+    </section>
+
+    
+</main>
+</div>
+<script>
+      (function () {
+        var KEY = 'stillHereTodos';
+        var DAY = 24 * 60 * 60 * 1000;
+        var listEl = document.getElementById('todoList');
+
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function toInputValue(d) {
+          return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+                 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+        function fmtTime(str) {
+          var d = new Date(str);
+          return (d.getMonth() + 1) + '月' + pad(d.getDate()) + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+        function load() {
+          try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+          catch (e) { return []; }
+        }
+        function save() {
+          try { localStorage.setItem(KEY, JSON.stringify(todos)); } catch (e) {}
+        }
+
+        var todos = load();
+
+        // 第一次打开时放三条示例数据方便预览效果；不需要可整段删除
+        var firstRun = false;
+        try { firstRun = localStorage.getItem(KEY) === null; } catch (e) {}
+        if (firstRun && todos.length === 0) {
+          var now = Date.now();
+          todos = [
+            { id: now + 1, text: '示例：完成个人网站的“联系”板块', time: toInputValue(new Date(now + 2 * DAY)), urgency: 'high', done: false },
+            { id: now + 2, text: '示例：预习下周的课程', time: toInputValue(new Date(now + 3 * DAY)), urgency: 'mid', done: false },
+            { id: now + 3, text: '示例：整理书桌', time: toInputValue(new Date(now + 1 * DAY)), urgency: 'low', done: true }
+          ];
+          save();
+        }
+
+        // 截止时间超过 24 小时的事项自动删除（无论是否完成）
+        function cleanExpired() {
+          var now = Date.now();
+          var remain = todos.filter(function (t) {
+            return new Date(t.time).getTime() + DAY > now;
+          });
+          if (remain.length !== todos.length) { todos = remain; save(); }
+        }
+
+        function remainingText(endMs) {
+          var ms = endMs - Date.now();
+          if (ms <= 0) return '（已逾期）';
+          var h = Math.floor(ms / 3600000);
+          if (h < 1) return '（剩不到 1 小时）';
+          if (h < 48) return '（剩 ' + h + ' 小时）';
+          return '（剩 ' + Math.round(h / 24) + ' 天）';
+        }
+
+        function render() {
+          // 未完成的排前面（同组内按截止时间从早到晚），完成的固定沉到最末尾
+          todos.sort(function (a, b) {
+            if (a.done !== b.done) return a.done ? 1 : -1;
+            return new Date(a.time) - new Date(b.time);
+          });
+
+          listEl.innerHTML = '';
+          if (todos.length === 0) {
+            var empty = document.createElement('li');
+            empty.className = 'todo-empty';
+            empty.textContent = '暂无待办，在上面添加一件吧～';
+            listEl.appendChild(empty);
+            return;
+          }
+
+          var hasPending = todos.some(function (t) { return !t.done; });
+          var dividerAdded = false;
+
+          todos.forEach(function (t) {
+            if (t.done && hasPending && !dividerAdded) {
+              var dv = document.createElement('li');
+              dv.className = 'todo-divider';
+              dv.textContent = '—— 已完成 ——';
+              listEl.appendChild(dv);
+              dividerAdded = true;
+            }
+
+            var li = document.createElement('li');
+            li.className = 'todo-item' + (t.done ? ' done' : '');
+
+            var check = document.createElement('span');
+            check.className = 'todo-check';
+            check.dataset.id = t.id;
+            check.title = '点击切换完成状态';
+            check.textContent = '✓';
+
+            var main = document.createElement('div');
+            main.className = 'todo-main';
+
+            var text = document.createElement('div');
+            text.className = 'todo-text';
+            text.textContent = t.text;
+
+            var end = new Date(t.time);
+            var overdue = !t.done && end.getTime() < Date.now();
+            var meta = document.createElement('div');
+            meta.className = 'todo-meta' + (overdue ? ' overdue' : '');
+
+            var badge = document.createElement('span');
+            badge.className = 'badge ' + t.urgency;
+            badge.title = '紧迫度';
+            badge.textContent = t.urgency === 'high' ? '高' : (t.urgency === 'mid' ? '中' : '低');
+
+            var deadline = document.createElement('span');
+            deadline.className = 'todo-deadline';
+            deadline.textContent = '截止 ' + fmtTime(t.time) + (t.done ? '' : remainingText(end.getTime()));
+
+            meta.appendChild(badge);
+            meta.appendChild(deadline);
+            main.appendChild(text);
+            main.appendChild(meta);
+
+            var del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'todo-del';
+            del.dataset.del = t.id;
+            del.title = '删除';
+            del.textContent = '✕';
+
+            li.appendChild(check);
+            li.appendChild(main);
+            li.appendChild(del);
+            listEl.appendChild(li);
+          });
+        }
+
+        document.getElementById('todoForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var textEl = document.getElementById('todoText');
+          var timeEl = document.getElementById('todoTime');
+          var text = textEl.value.trim();
+          if (!text || !timeEl.value) return;
+          todos.push({
+            id: Date.now(),
+            text: text,
+            time: timeEl.value,
+            urgency: document.getElementById('todoUrgency').value,
+            done: false
+          });
+          save();
+          render();
+          textEl.value = '';
+          timeEl.value = toInputValue(new Date(Date.now() + DAY));
+          textEl.focus();
+        });
+
+        listEl.addEventListener('click', function (e) {
+          var check = e.target.closest ? e.target.closest('.todo-check') : null;
+          if (check) {
+            for (var i = 0; i < todos.length; i++) {
+              if (String(todos[i].id) === check.dataset.id) { todos[i].done = !todos[i].done; break; }
+            }
+            save();
+            render();
+            return;
+          }
+          var del = e.target.closest ? e.target.closest('.todo-del') : null;
+          if (del) {
+            todos = todos.filter(function (t) { return String(t.id) !== del.dataset.del; });
+            save();
+            render();
+          }
+        });
+
+        document.getElementById('todoTime').value = toInputValue(new Date(Date.now() + DAY));
+
+        cleanExpired();
+        render();
+        // 页面保持打开时每分钟刷新一次：自动删除过期事项、更新剩余时间
+        setInterval(function () { cleanExpired(); render(); }, 60 * 1000);
+      })();
+    </script>
+</body>
+</html>

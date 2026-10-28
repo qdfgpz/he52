@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>书单 · Still Here</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+<div class="page-wrap">
+<aside class="site-side">
+<div class="site-brand">🏛 Still Here</div>
+<ul class="site-nav">
+<li><a href="test1.html">🏠 首页 · 待办</a></li>
+<li><a href="hub.html">📰 每日情报站</a></li>
+<li><a href="philosophy.html">🧠 每日哲学</a></li>
+<li><a href="movies.html">🎬 电影片单</a></li>
+<li><a class="cur" href="books.html">📚 书单</a></li>
+<li><a href="mao.html">📕 每日毛选</a></li>
+<li><a href="greek.html">🏛️ 古希腊文明</a></li>
+<li><a href="about friends.html">👥 关于我的朋友们</a></li>
+</ul>
+
+<a class="side-contact" href="mailto:your-email@example.com">✉️ 联系我</a>
+</aside>
+<main class="site-main">
+<!-- ===== 模块五：书单 ===== -->
+    <section class="book-section" id="books">
+      <h2>📚 书单</h2>
+      <p class="book-date" id="bkDate"></p>
+      <div class="book-pick">
+        <p class="book-pick-tag">📖 今日推荐 · 豆瓣高分</p>
+        <p class="book-pick-name" id="bkPickName"></p>
+        <p class="book-pick-meta" id="bkPickMeta"></p>
+        <p class="book-pick-line" id="bkPickLine"></p>
+        <ul class="book-quotes" id="bkPickQuotes"></ul>
+      </div>
+      <h3 class="book-sub">📝 我的书单记录</h3>
+      <form class="book-form" id="bookForm">
+        <div class="book-row">
+          <input type="date" id="bkDateInput" required>
+          <input type="text" id="bkNameInput" placeholder="书名" maxlength="60" required>
+        </div>
+        <textarea id="bkThought" placeholder="读完的感受……（可不填）" maxlength="300"></textarea>
+        <button type="submit">登记</button>
+      </form>
+      <ul id="bookList"></ul>
+    </section>
+    <script>
+      var BOOK_POOL = [
+        { n: '红楼梦', a: '曹雪芹', y: '1791', s: 9.6, line: '满纸荒唐言，一把辛酸泪——中国古典小说的顶点。',
+          q: ['满纸荒唐言，一把辛酸泪。都云作者痴，谁解其中味？', '世事洞明皆学问，人情练达即文章。', '假作真时真亦假，无为有处有还无。'] },
+        { n: '活着', a: '余华', y: '1993', s: 9.4, line: '福贵的一生，把“活着”两个字写成了史诗。',
+          q: ['人是为了活着本身而活着，而不是为了活着之外的任何事物而活着。', '少年去游荡，中年想掘藏，老年做和尚。'] },
+        { n: '1984', a: '乔治·奥威尔', y: '1949', s: 9.4, line: '老大哥在看着你——最令人脊背发凉的政治寓言。',
+          q: ['战争即和平，自由即奴役，无知即力量。', '谁控制过去就控制未来；谁控制现在就控制过去。', '老大哥在看着你。'] },
+        { n: '百年孤独', a: '加西亚·马尔克斯', y: '1967', s: 9.3, line: '多年以后，面对行刑队，他想起那个看冰块的下午。',
+          q: ['多年以后，面对行刑队，奥雷里亚诺上校将会回想起父亲带他去见识冰块的那个遥远的下午。', '生命中真正重要的不是你遭遇了什么，而是你记住了哪些事，又是如何铭记的。', '过去都是假的，回忆是一条没有归途的路。'] },
+        { n: '围城', a: '钱钟书', y: '1947', s: 9.3, line: '婚姻是一座围城，城外的人想进去，城里的人想出来。',
+          q: ['婚姻是一座围城，城外的人想进去，城里的人想出来。', '天下只有两种人：一种人挑最好的葡萄先吃，另一种人把最好的留到最后吃。', '我们对采摘不到的葡萄，不但想象它酸，也很可能想象它是分外地甜。'] },
+        { n: '三体', a: '刘慈欣', y: '2006', s: 9.3, line: '宇宙就是一座黑暗森林，每个文明都是带枪的猎人。',
+          q: ['弱小和无知不是生存的障碍，傲慢才是。', '给岁月以文明，而不是给文明以岁月。', '宇宙就是一座黑暗森林，每个文明都是带枪的猎人。'] },
+        { n: '动物农场', a: '乔治·奥威尔', y: '1945', s: 9.3, line: '动物们赶走人类建立理想国，然后……比童话更冷的历史寓言。',
+          q: ['所有动物一律平等，但有些动物比其他动物更平等。', '四条腿好，两条腿坏。', '我要更努力地工作。'] },
+        { n: '福尔摩斯探案全集', a: '柯南·道尔', y: '1887', s: 9.2, line: '排除一切不可能的，剩下的就是真相。',
+          q: ['排除一切不可能的，剩下的即使多么难以置信，那也是真相。', '我从不猜测。猜测是一种极坏的习惯，会影响逻辑推理。', '对于一个伟大的头脑来说，没有什么是微不足道的。'] },
+        { n: '小王子', a: '圣埃克苏佩里', y: '1943', s: 9.1, line: '所有的大人都曾是小孩，虽然只有少数人记得。',
+          q: ['重要的东西，用眼睛是看不见的，只有用心才能看得清楚。', '你在你的玫瑰花身上耗费的时间，使得你的玫瑰花变得如此重要。', '所有的大人都曾经是小孩，虽然只有少数的人记得。'] },
+        { n: '苏菲的世界', a: '乔斯坦·贾德', y: '1991', s: 9.1, line: '一封神秘来信，带你从苏格拉底一路走到萨特。',
+          q: ['你是谁？', '世界从何而来？', '最聪明的是明白自己无知的人。'] },
+        { n: '人类简史', a: '尤瓦尔·赫拉利', y: '2011', s: 9.1, line: '从非洲草原到人工智能，十万年人类史的宏大叙事。',
+          q: ['智人统治世界，是因为只有智人能够编织出互为主体的意义之网。', '金钱是有史以来最普遍也最有效的互信系统。', '历史从无正义。'] },
+        { n: '白夜行', a: '东野圭吾', y: '1999', s: 9.1, line: '我的天空里没有太阳，总是黑夜——东野圭吾的巅峰。',
+          q: ['我的天空里没有太阳，总是黑夜，但并不暗，因为有东西代替了太阳。', '只希望能手牵手在太阳下散步。'] },
+        { n: '月亮与六便士', a: '毛姆', y: '1919', s: 9.0, line: '满地都是六便士，他却抬头看见了月亮。',
+          q: ['我必须画画。我身不由己。一个人掉进水里，他游泳游得好不好是无关紧要的，反正他得挣扎出去。', '一般人都不是他们想要做的那种人，而是他们不得不做的那种人。'] },
+        { n: '平凡的世界', a: '路遥', y: '1986', s: 9.0, line: '在苦难中把日子过成诗，普通人的英雄主义。',
+          q: ['生活不能等待别人来安排，要自己去争取和奋斗。', '只有永不遏制的奋斗，才能使青春之花即便是凋谢，也是壮丽的凋谢。'] },
+        { n: '局外人', a: '加缪', y: '1942', s: 9.0, line: '今天，妈妈死了。也许是昨天，我不知道——荒诞文学的第一课。',
+          q: ['今天，妈妈死了。也许是昨天，我不知道。', '人生在世，永远也不该演戏作假。', '我体验到这个世界如此像我，如此友爱融洽，觉得自己过去曾经是幸福的，现在仍然是幸福的。'] },
+        { n: '追风筝的人', a: '卡勒德·胡赛尼', y: '2003', s: 8.9, line: '为你，千千万万遍。',
+          q: ['为你，千千万万遍。', '许多年过去了，人们说陈年旧事可以被埋葬，然而我终于明白这是错的，因为往事会自行爬上来。', '当罪行导致善行，那就是真正的获救。'] },
+        { n: '无人生还', a: '阿加莎·克里斯蒂', y: '1939', s: 8.9, line: '十个小兵人，一个接一个——推理女王最完美的密室。',
+          q: ['十个小士兵，出门打牙祭；不幸噎住喉，十个只剩九。', '没有人能离开这座岛。'] },
+        { n: '万历十五年', a: '黄仁宇', y: '1981', s: 8.9, line: '公元 1587 年，平平无奇的一年，藏着王朝崩塌的密码。',
+          q: ['万历十五年，表面上似乎是四海升平，无事可记，实际上我们的大明帝国却已经走到了它发展的尽头。', '当一个人口众多的国家，各人行动全凭儒家简单粗浅而又无法固定的原则所限制，而法律又缺乏创造性，则其社会发展的程度，必然受到限制。'] },
+        { n: '枪炮、病菌与钢铁', a: '贾雷德·戴蒙德', y: '1997', s: 8.9, line: '为什么是欧洲征服了世界？地理决定论的震撼之作。',
+          q: ['为什么你们白人制造了那么多货物运到新几内亚来，而我们黑人却几乎没有属于自己的货物？', '各大陆民族长期历史之间的显著差异，不是源自这些民族本身的天生差异，而是源自他们环境的差异。'] },
+        { n: '人类群星闪耀时', a: '茨威格', y: '1927', s: 8.7, line: '十四个决定历史的瞬间，茨威格把历史写成了诗。',
+          q: ['一个民族，千百万人的命运，往往在某一秒钟被决定。', '人生最大的幸运，莫过于在他年富力强时发现了自己的人生使命。'] },
+        { n: '影响力', a: '罗伯特·西奥迪尼', y: '1984', s: 8.7, line: '为什么我们总会说“好”？六大心理武器，看懂别人也看懂自己。',
+          q: ['文明的进步，就是人们在不假思索中可以做的事情越来越多。', '我们在要别人帮忙的时候，要是能给一个理由，成功的概率会更大。'] },
+        { n: '解忧杂货店', a: '东野圭吾', y: '2012', s: 8.5, line: '把烦恼投进卷帘门，第二天收到回信——东野圭吾最温柔的一本。',
+          q: ['很多时候，咨询的人心里已经有了答案，来咨询只是想确认自己的决定是对的。', '如果连自己都不相信自己，那么无论做什么都不会顺利。'] },
+        { n: '海边的卡夫卡', a: '村上春树', y: '2002', s: 8.5, line: '十五岁少年的出走，猫会说话，鱼从天而降——村上的魔幻之旅。',
+          q: ['当你穿过了暴风雨，你早已不再是原来那个人。', '命运就像沙尘暴，你无处逃遁。只有勇敢跨入其中，当你从沙尘暴中逃出，你已不是跨入时的你了。'] },
+        { n: '如何阅读一本书', a: '莫提默·艾德勒', y: '1940', s: 8.4, line: '一本教你怎么读书的书，读完能多读懂一百本。',
+          q: ['阅读一本好书，会让你的努力有所回报。最好的书对你的回馈也最多。', '一个阅读者要提出的四个基本问题：这本书在谈什么？作者说了什么、怎么说的？说得有道理吗？这本书跟你有什么关系？'] }
+      ];
+      (function () {
+        var d = new Date();
+        var day = Math.floor(d.setHours(0, 0, 0, 0) / 86400000);
+        var today = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+        var bi = day % BOOK_POOL.length;
+        var b = BOOK_POOL[bi];
+        document.getElementById('bkDate').textContent = '今日推荐 · 第 ' + (bi + 1) + ' / ' + BOOK_POOL.length + ' 本 · ' + today;
+        document.getElementById('bkPickName').innerHTML = b.n + ' <span class="book-score">' + b.s.toFixed(1) + '</span>';
+        document.getElementById('bkPickMeta').textContent = b.a + ' · ' + b.y;
+        document.getElementById('bkPickLine').textContent = '「' + b.line + '」';
+        document.getElementById('bkPickQuotes').innerHTML = (b.q || []).map(function (s) {
+          return '<li></li>';
+        }).join('');
+        var qEls = document.getElementById('bkPickQuotes').querySelectorAll('li');
+        for (var qi = 0; qi < qEls.length; qi++) { qEls[qi].textContent = b.q[qi]; }
+
+        var KEY = 'myBooks';
+        var list = [];
+        try { list = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { list = []; }
+        var listEl = document.getElementById('bookList');
+        var dateEl = document.getElementById('bkDateInput');
+        var nameEl = document.getElementById('bkNameInput');
+        var thEl = document.getElementById('bkThought');
+        dateEl.value = today;
+
+        function save() { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} }
+        function render() {
+          listEl.innerHTML = '';
+          if (!list.length) {
+            var li = document.createElement('li');
+            li.className = 'book-empty';
+            li.textContent = '还没有记录，读完一本书来登记吧～';
+            listEl.appendChild(li);
+            return;
+          }
+          list.forEach(function (b) {
+            var li = document.createElement('li');
+            li.className = 'book-item';
+            var head = document.createElement('div');
+            head.className = 'bk-head';
+            var nm = document.createElement('span');
+            nm.className = 'bk-name';
+            nm.textContent = b.name;
+            var tm = document.createElement('span');
+            tm.className = 'bk-time';
+            tm.textContent = b.date;
+            var del = document.createElement('button');
+            del.className = 'bk-del';
+            del.type = 'button';
+            del.title = '删除';
+            del.textContent = '✕';
+            del.dataset.id = b.id;
+            head.appendChild(nm);
+            head.appendChild(tm);
+            head.appendChild(del);
+            var th = document.createElement('p');
+            th.className = 'bk-thought';
+            th.textContent = b.thought || '';
+            if (!b.thought) { th.style.display = 'none'; }
+            li.appendChild(head);
+            li.appendChild(th);
+            listEl.appendChild(li);
+          });
+        }
+        render();
+
+        document.getElementById('bookForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var name = nameEl.value.trim();
+          if (!name || !dateEl.value) return;
+          list.unshift({ id: Date.now(), name: name, date: dateEl.value, thought: thEl.value.trim() });
+          save();
+          render();
+          nameEl.value = '';
+          thEl.value = '';
+        });
+        listEl.addEventListener('click', function (e) {
+          var del = e.target.closest ? e.target.closest('.bk-del') : null;
+          if (!del) return;
+          list = list.filter(function (b) { return String(b.id) !== del.dataset.id; });
+          save();
+          render();
+        });
+      })();
+    </script>
+    
+</main>
+</div>
+
+</body>
+</html>
