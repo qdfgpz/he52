@@ -141,7 +141,9 @@
               setTimeout(function () { if (!btn.disabled) refreshAll(); }, 8000);
             }
           }).catch(function () {
-            statusEl.textContent = '后端未启动？请先运行 start.bat';
+            statusEl.textContent = (location.protocol === 'file:')
+              ? '⚠ 当前是直接双击打开的本地文件，实时刷新不可用——请在地址栏输入 http://127.0.0.1:8898/hub.html 访问'
+              : '⚠ 连接后端失败：请先运行 start.bat（或桌面快捷方式）；若代理软件开着，需在代理中放行/绕过 127.0.0.1';
             btn.disabled = false;
             renderFallback();
           });
