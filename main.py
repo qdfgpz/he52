@@ -34,15 +34,44 @@ HEADERS = {
 CACHE_TTL = 600  # 秒：10 分钟内直接返回缓存
 _cache_lock = threading.Lock()
 _refresh_lock = threading.Lock()
+_fetch_lock = threading.Lock()   # 抓取单飞：同一时刻只跑一轮，并发的强制刷新共用结果
 _refreshing = {"v": False}
 _cache = {"data": None, "ts": 0.0}
+FORCE_FRESH_WINDOW = 5  # 秒：强制刷新时，缓存比这更新说明刚有另一轮抓完，直接复用
 
 JUNK = re.compile(r"聚焦赛场|同步全球|实时查看|实时赛事|随时追踪|赛场焦点|获取最新|点击观看|限时领取|全网最低|一键三连|合集.*全集|完整版")
 NBA_TEAMS = re.compile(r"NBA|WNBA|篮球|勇士|湖人|凯尔特人|独行侠|快船|雄鹿|掘金|太阳|热火|尼克斯|森林狼|骑士|雷霆|步行者|活塞|76人|篮网|老鹰|黄蜂|公牛|猛龙|魔术|奇才|开拓者|灰熊|马刺|国王|火箭|鹈鹕|爵士|库里|詹姆斯|杜兰特|文班亚马|哈登")
-THU_PRI = re.compile(r"AI|人工智能|大模型|机器人|芯片|半导|核|原子|聚变|反应堆|辐射|物理|量子")
 
+BILI_HOME = "https://www.bilibili.com/"
 BILI_SEARCH = "https://api.bilibili.com/x/web-interface/search/type"
 ESPN_HEAT_SCHEDULE = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/mia/schedule"
+
+
+def _warm_bili_cookies(client: httpx.Client) -> None:
+    """B 站搜索接口不带 Cookie 时直接返回 412 风控（只有几十字节的拦截页）。
+    先访问一次首页拿到 buvid3，实测 412 消失、整轮抓取从 20 秒降到 2~3 秒。
+    这一步失败不影响其他源，B 站板块自己会标记拉取失败。"""
+    try:
+        client.get(BILI_HOME, timeout=6)
+    except Exception:
+        pass
+
+
+def _merge(fresh: dict, old) -> dict:
+    """本轮某个源没抓到内容时，沿用上一次成功的内容，并记录它是几点抓的。
+    避免一次网络抖动就把页面上已有的新闻清空。"""
+    if not old:
+        return fresh
+    stale = dict(fresh.get("stale") or {})
+    old_stale = old.get("stale") or {}
+    for k in ("ai", "nba", "csgo"):
+        if not fresh.get(k) and old.get(k):
+            fresh[k] = old[k]
+            stale[k] = old_stale.get(k) or old.get("updated")
+    if stale:
+        fresh["stale"] = stale
+    return fresh
+
 
 def _warm_cache():
     """启动预热：服务一起来就后台抓一次，消除重启后首次访问的长等待"""
@@ -139,68 +168,75 @@ def bili_get(client: httpx.Client, params: dict) -> dict:
 
 
 def fetch_source(client: httpx.Client, kind: str) -> tuple:
-    """抓取单个源，返回 (key, items, failed)"""
-    try:
-        if kind == "ai":  # 量子位 RSS，24 小时内
-            r = client.get("https://www.qbitai.com/feed")
-            return kind, parse_rss(r.text, 4, 24), False
-
-        if kind == "nba":  # B 站最新战报，36 小时内且标题须 NBA 相关
-            r = bili_get(client, {"search_type": "video", "order": "pubdate", "keyword": "NBA战报"})
-            return kind, bili_items(r, 4, "", 36, NBA_TEAMS), False
-
-        if kind == "thu":  # B 站“清华大学”清华系账号，72 小时内，AI/核科学优先
-            r = bili_get(client, {"search_type": "video", "order": "pubdate", "keyword": "清华大学"})
-            items = bili_items(r, 12, "清华", 72)
-            pri = [it for it in items if THU_PRI.search(it["t"])]
-            rest = [it for it in items if not THU_PRI.search(it["t"])]
-            return kind, (pri + rest)[:4], False
-
-        if kind == "csgo_hltv":  # HLTV 国际要闻，72 小时内
-            r = client.get("https://www.hltv.org/rss/news")
-            return kind, parse_rss(r.text, 2, 72), False
-
-        if kind == "csgo_up":  # CSGO-DOUBLEup 最新视频，72 小时内
-            r = bili_get(client, {"search_type": "video", "order": "pubdate", "keyword": "CSGO-DOUBLEup"})
-            return kind, bili_items(r, 2, "CSGO", 72), False
-        if kind == "heat_schedule":  # 热火队近期赛程（ESPN 官方接口，休赛日兜底）
-            r = client.get(ESPN_HEAT_SCHEDULE)
-            data = r.json()
-            out = []
-            for e in (data.get("events") or []):
-                date_raw = str(e.get("date") or "")[:16].replace("T", " ")
-                teams = []
-                score_part = ""
-                for comp in ((e.get("competitions") or [{}])[0].get("competitors") or []):
-                    teams.append(comp.get("team", {}).get("displayName", "?"))
-                    sc = comp.get("score")
-                    if sc:
-                        score_part += (" " + str(sc.get("displayValue", ""))) if isinstance(sc, dict) else (" " + str(sc))
-                if len(teams) >= 2:
-                    line = "{} @ {}".format(teams[1], teams[0])
-                    if score_part:
-                        line += "（比分{}）".format(score_part.strip())
-                    out.append({"t": "{} · {}".format(date_raw, line), "u": "https://www.espn.com/nba/team/_/name/mia/miami-heat"})
-                if len(out) >= 4:
-                    break
-            return kind, out, False
-    except Exception as e:
-        print("[fetch] %s 拉取失败: %r" % (kind, e), flush=True)
+    """抓取单个源，返回 (key, items, failed)。非 B 站源失败时原地重试一次，
+    覆盖偶发的 SSL 断连（实测量子位/HLTV 会间歇报 UNEXPECTED_EOF）。"""
+    last_err = None
+    for attempt in range(2):
+        if attempt:
+            time.sleep(1)
+        try:
+            return _fetch_source_once(client, kind)
+        except Exception as e:
+            last_err = e
+    print("[fetch] %s 拉取失败: %r" % (kind, last_err), flush=True)
     return kind, [], True
+
+
+def _fetch_source_once(client: httpx.Client, kind: str) -> tuple:
+    if kind == "ai":  # 量子位 RSS，24 小时内
+        r = client.get("https://www.qbitai.com/feed")
+        return kind, parse_rss(r.text, 4, 24), False
+
+    if kind == "nba":  # B 站最新战报，36 小时内且标题须 NBA 相关
+        r = bili_get(client, {"search_type": "video", "order": "pubdate", "keyword": "NBA战报"})
+        return kind, bili_items(r, 4, "", 36, NBA_TEAMS), False
+
+    if kind == "csgo_hltv":  # HLTV 国际要闻，72 小时内
+        r = client.get("https://www.hltv.org/rss/news")
+        return kind, parse_rss(r.text, 2, 72), False
+
+    if kind == "csgo_up":  # CSGO-DOUBLEup 最新视频，72 小时内
+        r = bili_get(client, {"search_type": "video", "order": "pubdate", "keyword": "CSGO-DOUBLEup"})
+        return kind, bili_items(r, 2, "CSGO", 72), False
+
+    if kind == "heat_schedule":  # 热火队近期赛程（ESPN 官方接口，休赛日兜底）
+        r = client.get(ESPN_HEAT_SCHEDULE)
+        data = r.json()
+        out = []
+        for e in (data.get("events") or []):
+            date_raw = str(e.get("date") or "")[:16].replace("T", " ")
+            teams = []
+            score_part = ""
+            for comp in ((e.get("competitions") or [{}])[0].get("competitors") or []):
+                teams.append(comp.get("team", {}).get("displayName", "?"))
+                sc = comp.get("score")
+                if sc:
+                    score_part += (" " + str(sc.get("displayValue", ""))) if isinstance(sc, dict) else (" " + str(sc))
+            if len(teams) >= 2:
+                line = "{} @ {}".format(teams[1], teams[0])
+                if score_part:
+                    line += "（比分{}）".format(score_part.strip())
+                out.append({"t": "{} · {}".format(date_raw, line), "u": "https://www.espn.com/nba/team/_/name/mia/miami-heat"})
+            if len(out) >= 4:
+                break
+        return kind, out, False
+
+    raise RuntimeError("unknown source: %s" % kind)
 
 
 def fetch_all() -> dict:
     """并发抓取全部数据源，返回聚合结果"""
-    keys = ["ai", "nba", "thu", "csgo_hltv", "csgo_up", "heat_schedule"]
+    keys = ["ai", "nba", "csgo_hltv", "csgo_up", "heat_schedule"]
     data = {}
     with httpx.Client(headers=HEADERS, timeout=12, follow_redirects=True) as client:
+        _warm_bili_cookies(client)
         with ThreadPoolExecutor(max_workers=5) as pool:
             for kind, items, failed in pool.map(lambda k: fetch_source(client, k), keys):
                 data[kind] = {"items": items, "failed": failed}
 
     csgo = data["csgo_hltv"]["items"] + data["csgo_up"]["items"]
     now = datetime.now()
-    failed = [k for k in ["ai", "nba", "thu"] if data[k]["failed"] and not data[k]["items"]]
+    failed = [k for k in ["ai", "nba"] if data[k]["failed"] and not data[k]["items"]]
     if not csgo and (data["csgo_hltv"]["failed"] or data["csgo_up"]["failed"]):
         failed.append("csgo")
 
@@ -216,24 +252,47 @@ def fetch_all() -> dict:
         "ai": data["ai"]["items"],
         "nba": nba_final,
         "nba_is_schedule": not data["nba"]["items"],
-        "thu": data["thu"]["items"],
         "csgo": csgo,
         "failed": failed,
     }
 
 
-@app.get("/api/news", summary="实时抓取四个板块的要闻")
+@app.get("/api/news", summary="实时抓取三个板块的要闻")
 def get_news(force: int = 0):
-    """AI(24h) / NBA(36h) / 清华科研(72h) / CS:GO(72h)，各源独立容错。
+    """AI(24h) / NBA(36h) / CS:GO(72h)，各源独立容错。
     10 分钟内的调用直接返回缓存；缓存过期时立即返回旧数据并在后台刷新
-    （Stale-While-Revalidate），用户永远不用对着白屏等待。?force=1 强制同步抓取。"""
+    （Stale-While-Revalidate），用户永远不用对着白屏等待。
+    ?force=1 时同步抓取并等待新结果返回（前端「实时刷新」按钮走这条路），
+    并发的强制刷新共用同一轮抓取；某源这一轮没抓到内容时沿用上次的内容。"""
     now_ts = time.time()
     with _cache_lock:
         cached = _cache["data"]
         ts = _cache["ts"]
 
-    if cached and not force and now_ts - ts < CACHE_TTL:
-        return cached
+    def send(data: dict) -> dict:
+        if not data.get("refreshing"):
+            data = dict(data)
+            data.pop("refreshing", None)
+        return data
+
+    if force:
+        # 刚刚有别的请求抓完，直接复用，别连着打数据源
+        if cached and now_ts - ts < FORCE_FRESH_WINDOW:
+            return send(cached)
+        with _fetch_lock:
+            with _cache_lock:
+                cached = _cache["data"]
+                ts = _cache["ts"]
+            if cached and time.time() - ts < FORCE_FRESH_WINDOW:
+                return send(cached)
+            fresh = _merge(fetch_all(), cached)
+            with _cache_lock:
+                _cache["data"] = fresh
+                _cache["ts"] = time.time()
+            return send(fresh)
+
+    if cached and now_ts - ts < CACHE_TTL:
+        return send(cached)
 
     # 有旧数据：立即返回 + 后台刷新（不打扰用户）
     if cached:
@@ -244,7 +303,7 @@ def get_news(force: int = 0):
 
         def bg():
             try:
-                fresh = fetch_all()
+                fresh = _merge(fetch_all(), _cache["data"])
                 with _cache_lock:
                     _cache["data"] = fresh
                     _cache["ts"] = time.time()

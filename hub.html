@@ -37,16 +37,6 @@
           </ul>
         </div>
         <div class="hub-card">
-          <h3>🎓 清华科研 <span class="hub-tag">工物 · 原子 · 核</span></h3>
-          <ul class="hub-live" id="live-thu"></ul>
-          <ul>
-            <li><a href="https://news.tsinghua.edu.cn/" target="_blank" rel="noopener noreferrer">清华新闻网 <span class="hub-desc">官方科研要闻</span></a></li>
-            <li><a href="https://www.inet.tsinghua.edu.cn/" target="_blank" rel="noopener noreferrer">核研院 <span class="hub-desc">核能·原子能方向</span></a></li>
-            <li><a href="https://www.phys.tsinghua.edu.cn/" target="_blank" rel="noopener noreferrer">物理系 <span class="hub-desc">前沿物理进展</span></a></li>
-            <li><a href="https://www.tsinghua.edu.cn/kxyj.htm" target="_blank" rel="noopener noreferrer">清华官网·科学研究 <span class="hub-desc">全校科研成果汇总</span></a></li>
-          </ul>
-        </div>
-        <div class="hub-card">
           <h3>🔫 CS:GO 军械库</h3>
           <ul class="hub-live" id="live-csgo"></ul>
           <ul>
@@ -71,10 +61,10 @@
       (function () {
         var btn = document.getElementById('hubRefreshBtn');
         var statusEl = document.getElementById('hubStatus');
+        var KEYS = ['ai', 'nba', 'csgo'];
         var emptyMsg = {
           ai: '今日重磅还没送到，先用下面渠道直达～',
           nba: '今天没有新战报（可能休赛日），点下面渠道看最新动态',
-          thu: '今天暂无新发布，点下面渠道看最新进展',
           csgo: '今日重磅还没送到，先用下面渠道直达～'
         };
         var failMsg = '这个源暂时拉取失败，稍后再点一次试试';
@@ -97,11 +87,21 @@
           }
         }
 
+        /* 后端这一轮没抓到新内容、沿用了上次成功的内容时，把抓取时间标出来 */
+        function markStale(k, at) {
+          var el = document.getElementById('live-' + k);
+          if (!el || !at) return;
+          var li = document.createElement('li');
+          li.className = 'hub-stale';
+          li.textContent = '源暂时抓不到新内容，以上为 ' + at + ' 抓取的结果';
+          el.appendChild(li);
+        }
+
         function renderFallback() {
           var hasData = (typeof DAILY_NEWS !== 'undefined');
           var d = new Date();
           var today = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-          var boxes = { ai: 'live-ai', nba: 'live-nba', thu: 'live-thu', csgo: 'live-csgo' };
+          var boxes = { ai: 'live-ai', nba: 'live-nba', csgo: 'live-csgo' };
           for (var k in boxes) {
             var items = (hasData && DAILY_NEWS[k]) ? DAILY_NEWS[k] : [];
             var el = document.getElementById(boxes[k]);
@@ -126,44 +126,55 @@
           return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
         }
 
-        function refreshAll() {
+        function apply(d) {
+          KEYS.forEach(function (k) {
+            renderBox(k, d[k] || [], (d.failed || []).indexOf(k) >= 0);
+          });
+          var stale = d.stale || {};
+          KEYS.forEach(function (k) { if (stale[k]) markStale(k, stale[k]); });
+          try { localStorage.setItem('hubRealtime', JSON.stringify({ date: d.date, time: d.updated, data: d })); } catch (e) {}
+        }
+
+        /* force=true：用户点按钮，后端同步抓取并等新结果（几秒）；
+           force=false：页面加载时先出缓存/旧数据，后台刷新，需要时 8 秒后再取一次 */
+        function refresh(force) {
+          if (btn.disabled) return;
           btn.disabled = true;
-          statusEl.textContent = '实时拉取中…';
-          fetch('/api/news').then(function (r) { return r.json(); }).then(function (d) {
-            ['ai', 'nba', 'thu', 'csgo'].forEach(function (k) {
-              renderBox(k, d[k] || [], (d.failed || []).indexOf(k) >= 0);
-            });
+          btn.textContent = force ? '⏳ 抓取中…' : '🔄 实时刷新';
+          statusEl.textContent = force ? '正在实时抓取，请稍等几秒…' : '实时拉取中…';
+          fetch('/api/news' + (force ? '?force=1' : '')).then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          }).then(function (d) {
+            apply(d);
             statusEl.textContent = '已实时更新 ' + d.updated;
-            try { localStorage.setItem('hubRealtime', JSON.stringify({ date: d.date, time: d.updated, data: d })); } catch (e) {}
             btn.disabled = false;
-            if (d.refreshing) {
+            btn.textContent = '🔄 实时刷新';
+            if (d.refreshing && !force) {
               statusEl.textContent = '已返回缓存，后台更新中，8 秒后自动再取…';
-              setTimeout(function () { if (!btn.disabled) refreshAll(); }, 8000);
+              setTimeout(function () { if (!btn.disabled) refresh(false); }, 8000);
             }
           }).catch(function () {
             statusEl.textContent = (location.protocol === 'file:')
               ? '⚠ 当前是直接双击打开的本地文件，实时刷新不可用——请在地址栏输入 http://127.0.0.1:8898/hub.html 访问'
               : '⚠ 连接后端失败：请先运行 start.bat（或桌面快捷方式）；若代理软件开着，需在代理中放行/绕过 127.0.0.1';
             btn.disabled = false;
+            btn.textContent = '🔄 实时刷新';
             renderFallback();
           });
         }
 
         // 先显示当天缓存（若有），再自动实时拉取一次（后端 10 分钟缓存，不频繁打扰数据源）
-        var hadCache = false;
         try {
           var cached = JSON.parse(localStorage.getItem('hubRealtime'));
           if (cached && cached.date === todayStr() && cached.data) {
-            hadCache = true;
-            ['ai', 'nba', 'thu', 'csgo'].forEach(function (k) {
-              renderBox(k, cached.data[k] || [], (cached.failed || []).indexOf(k) >= 0);
-            });
+            apply(cached.data);
             statusEl.textContent = '已实时更新 ' + cached.time;
           }
         } catch (e) {}
 
-        btn.addEventListener('click', refreshAll);
-        refreshAll();
+        btn.addEventListener('click', function () { refresh(true); });
+        refresh(false);
       })();
     </script>
 </body>
